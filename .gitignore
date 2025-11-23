@@ -1,0 +1,16 @@
+# Virtual environment
+.venv/
+.pio/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# VSCode
+.vscode/
