@@ -3,58 +3,53 @@
 
 #include <Arduino.h>
 
+// Max number of pins to monitor (adjust if needed)
+static const uint8_t DIGITAL_SCANNER_MAX_PINS = 8;
 
 class DigitalScanner {
 public:
-  struct PinState {
-    uint8_t pin;
-    int lastReading;
-    unsigned long lastEdgeTime;
-    unsigned long lastRiseTime;
-    unsigned long prevRiseTime;
-    unsigned long lastFallTime;
-    unsigned long sumPeriodMs;
-    unsigned long sumHighMs;
-    uint8_t periodCount;
-    uint8_t highCount;
-    float freqHz;
-    float dutyPct;
-    bool initialized;
-  };
-
-  // Construct with an explicit pins array, or call autoSelectPinsForUno()
-  DigitalScanner(const uint8_t *pins, uint8_t pinCount, uint8_t samples = 4, float offThresholdHz = 1.0f);
-  DigitalScanner(uint8_t samples = 4, float offThresholdHz = 1.0f);
-  ~DigitalScanner();
-  // Populate pins automatically for Arduino UNO (skips SCL/SDA and hardware PWM pins)
-  void autoSelectPinsForUno();
-  void begin();
-  // Call frequently in loop()
-  void update();
-
-  // IRQ/callback support
-  // Callback signature: void callback(uint8_t pin, bool rising)
   typedef void (*EdgeCallback)(uint8_t pin, bool rising);
-  // Register callbacks for rise/fall events on any scanned pin
-  void setEdgeCallback(EdgeCallback cb);
 
-  // Accessors
-  uint8_t getPinCount() const;
-  uint8_t getPin(uint8_t idx) const;
-  float getFrequencyHz(uint8_t idx) const; // 0.0 when considered off
-  float getDutyCyclePercent(uint8_t idx) const; // 0..100
+  DigitalScanner();
+  void addPin(uint8_t pin);
+  void begin();  // call once in setup()
+  void update(); // call frequently in loop()
 
-  // Low-level access (used by ISR code in the implementation)
-  PinState *states() { return _states; }
-  uint8_t pinCount() const { return _pinCount; }
-  EdgeCallback edgeCallback() const { return _edgeCb; }
+  void setEdgeCallback(EdgeCallback cb) { _edgeCb = cb; }
+  void setSamples(uint8_t n) { _samples = n; }
+  void setOffThresholdHz(float hz) { _offThresholdHz = hz; }
+
+  // Query results
+  uint8_t getPinCount() const { return _pinCount; }
+  uint8_t getPin(uint8_t idx) const { return idx < _pinCount ? _ch[idx].pin : 0xFF; }
+  float getFrequencyHz(uint8_t idx) const;
+  float getDutyCyclePercent(uint8_t idx) const;
 
 private:
-  PinState *_states;
-  uint8_t _pinCount;
-  uint8_t _samples;
-  float _offThresholdHz;
-  EdgeCallback _edgeCb;
+  struct Channel {
+    uint8_t pin;
+    uint8_t lastRead;
+    unsigned long lastEdge;
+    unsigned long lastRise;
+    unsigned long prevRise;
+    unsigned long lastFall;
+
+    unsigned long long sumPeriod;
+    unsigned long long sumHigh;
+    uint16_t periodCount;
+    uint16_t highCount;
+
+    float freqHz;
+    float dutyPct;
+  };
+
+  Channel _ch[DIGITAL_SCANNER_MAX_PINS];
+  uint8_t _pinCount = 0;
+  uint8_t _samples = 4;
+  float _offThresholdHz = 1.0f; // Hz
+  EdgeCallback _edgeCb = nullptr;
+  unsigned long _lastClear = 0;
+  static const unsigned long TIMEOUT_MS = 2000; // 2s fallback
 };
 
-#endif // DIGITAL_SCANNER_H
+#endif
