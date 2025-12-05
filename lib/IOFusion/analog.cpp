@@ -1,0 +1,48 @@
+#include "analog.h"
+
+AnalogSampler::AnalogSampler() {
+  for (uint8_t i = 0; i < MAX_CHANNELS; ++i) _lastValues[i] = 0;
+}
+
+bool AnalogSampler::begin(const uint8_t* channels, uint8_t channelCount) {
+  if (channelCount == 0 || channelCount > MAX_CHANNELS) return false;
+  for (uint8_t i = 0; i < channelCount; ++i) {
+    uint8_t c = channels[i];
+    if (c > 5) return false; // only A0..A5 on typical AVR
+    _channels[i] = c;
+  }
+  _channelCount = channelCount;
+  for (uint8_t ch = 0; ch < _channelCount; ++ch) _lastValues[ch] = 0;
+  // Initialize analog input pins (no pinMode for analog pins required on AVR)
+  noInterrupts();
+  _sampleRequested = false;
+  interrupts();
+  return true;
+}
+
+void AnalogSampler::onTick() {
+  // called from ISR context — just set the request flag
+  _sampleRequested = true;
+}
+
+void AnalogSampler::sampleIfDue() {
+  if (!_sampleRequested) return;
+  // clear the flag
+  noInterrupts();
+  _sampleRequested = false;
+  interrupts();
+
+  for (uint8_t i = 0; i < _channelCount; ++i) {
+    uint8_t ch = _channels[i];
+    int v = analogRead(ch);
+    _lastValues[i] = v;
+  }
+}
+
+uint8_t AnalogSampler::getChannelCount() const { return _channelCount; }
+
+float AnalogSampler::getValue(uint8_t idx) const {
+  if (idx >= _channelCount) return 0.0f;
+  // ADC range is 0..1023, assume Vref = 5.0V
+  return ((float)_lastValues[idx] * 5.0f) / 1023.0f;
+}

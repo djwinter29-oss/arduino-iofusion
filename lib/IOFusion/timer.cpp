@@ -1,0 +1,92 @@
+#include "timer.h"
+
+// Static member definitions
+volatile Timer2Callback Timer2Driver::_cbs[Timer2Driver::MAX_CALLBACKS] = { nullptr, nullptr, nullptr, nullptr };
+
+Timer2Driver::Timer2Driver() {}
+
+uint16_t Timer2Driver::beginHz(float freqHz) {
+  if (freqHz <= 0) return 0;
+  // Stop timer2
+  TCCR2A = 0;
+  TCCR2B = 0;
+  TIMSK2 = 0; // disable interrupts
+
+  const uint32_t F_CPU32 = F_CPU;
+  // Timer2 is 8-bit; use CTC mode with OCR2A top (WGM21=1)
+  // Try prescalers to find OCR value within 0..255
+  const uint8_t presVals[] = {1, 8, 32, 64, 128, 256, 1024};
+  uint16_t chosenOCR = 0;
+  uint8_t chosenPresIdx = 0;
+  for (uint8_t i = 0; i < sizeof(presVals)/sizeof(presVals[0]); ++i) {
+    float pres = presVals[i];
+    float ocr = (F_CPU32 / (pres * freqHz)) - 1.0f;
+    if (ocr <= 255.0f) {
+      chosenOCR = (uint16_t)(ocr + 0.5f);
+      chosenPresIdx = i;
+      break;
+    }
+  }
+
+  // Configure CTC mode
+  TCCR2A = _BV(WGM21);
+  // Set OCR
+  OCR2A = (uint8_t)chosenOCR;
+  // Set prescaler bits
+  uint8_t csbits = 0;
+  switch (presVals[chosenPresIdx]) {
+    case 1: csbits = _BV(CS20); break;
+    case 8: csbits = _BV(CS21); break;
+    case 32: csbits = _BV(CS20) | _BV(CS21); break;
+    case 64: csbits = _BV(CS22); break;
+    case 128: csbits = _BV(CS22) | _BV(CS20); break;
+    case 256: csbits = _BV(CS22) | _BV(CS21); break;
+    case 1024: csbits = _BV(CS22) | _BV(CS21) | _BV(CS20); break;
+    default: csbits = _BV(CS20); break;
+  }
+  TCCR2B = csbits;
+
+  // enable compare match A interrupt
+  TIMSK2 |= _BV(OCIE2A);
+  return (uint16_t)chosenOCR;
+}
+
+void Timer2Driver::stop() {
+  TIMSK2 &= ~_BV(OCIE2A);
+  TCCR2A = 0;
+  TCCR2B = 0;
+}
+
+void Timer2Driver::attachCallback(Timer2Callback cb) {
+  noInterrupts();
+  for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
+    if (_cbs[i] == nullptr) {
+      _cbs[i] = cb;
+      break;
+    }
+  }
+  interrupts();
+}
+
+void Timer2Driver::detachCallback(Timer2Callback cb) {
+  noInterrupts();
+  for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
+    if (_cbs[i] == cb) {
+      _cbs[i] = nullptr;
+      break;
+    }
+  }
+  interrupts();
+}
+
+// No isSampleDue() flag — use attachCallback() for ISR work.
+
+// ISR for Timer2 Compare Match A
+ISR(TIMER2_COMPA_vect) {
+  // call callback if present
+  for (uint8_t i = 0; i < Timer2Driver::MAX_CALLBACKS; ++i) {
+    Timer2Callback cb = Timer2Driver::_cbs[i];
+    if (cb) cb();
+  }
+  // encoder tick should be attached via Timer2Driver::attachCallback()
+}

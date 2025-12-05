@@ -2,11 +2,13 @@
 
 #include "digital_scanner.h"
 #include "AnalogScanner.h"
+#include "timer.h"
 
 // Example pins (adjust for your board)
 // We'll use DigitalScanner to automatically choose pins on UNO.
 DigitalScanner scanner;
 AnalogScanner analogs(6, 8); // A0..A5, 8-sample average
+Timer2Driver t2;
 
 void setup() {
   Serial.begin(115200);
@@ -32,6 +34,24 @@ void setup() {
   Serial.println("main: after analogs.setUsePullup(false)");
   analogs.begin();
   Serial.println("main: returned from analogs.begin()");
+
+  // Start Timer2 at 100 Hz for ADC sampling
+  t2.beginHz(100.0f);
+
+  // Example: setup encoder generator outputs on pins 4 and 5 and input up/down on 6/7
+  // (up/down pins are used only if you want input counting; they will attach interrupts)
+  encoder.begin(4, 5, 6, 7);
+  // Encoder needs 4 timer ticks per full quadrature cycle — use 2 Hz * 4 = 8 Hz timer
+  t2.beginHz(2.0f * 4.0f);
+
+  // Optional: attach a tiny ISR callback (runs in ISR) - keep it minimal
+  t2.attachCallback([](){
+    // This runs in ISR; keep it short. Here we toggle the builtin LED quickly.
+    // Avoid Serial or heavy operations.
+    static bool s = false;
+    s = !s;
+    digitalWrite(LED_BUILTIN, s ? HIGH : LOW);
+  });
 
   // Register an edge callback (runs inside ISR on AVR; keep it minimal)
   scanner.setEdgeCallback([](uint8_t pin, bool rising){
