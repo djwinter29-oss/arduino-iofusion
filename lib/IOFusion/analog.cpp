@@ -34,6 +34,9 @@ void AnalogSampler::sampleIfDue() {
 
   for (uint8_t i = 0; i < _channelCount; ++i) {
     uint8_t ch = _channels[i];
+    // Discard first reading after switching channel to allow S/H capacitor to settle.
+    (void)analogRead(ch);
+    delayMicroseconds(5);
     int v = analogRead(ch);
     _lastValues[i] = v;
   }
