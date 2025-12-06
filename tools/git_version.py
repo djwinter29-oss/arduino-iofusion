@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 import subprocess
-
+# SCons build environment from PlatformIO, provided automatically
 Import("env")
 
 PROJECT_DIR = Path(env["PROJECT_DIR"])
