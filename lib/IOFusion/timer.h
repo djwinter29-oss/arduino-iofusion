@@ -20,6 +20,8 @@ public:
   void attachCallback(Timer2Callback cb);
   // Detach a specific callback previously attached. Pass the same function pointer.
   void detachCallback(Timer2Callback cb);
+  // ISR entry point
+  static void handleInterrupt();
 
 private:
   // internal state accessed from ISR
