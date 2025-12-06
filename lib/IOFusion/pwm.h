@@ -18,6 +18,9 @@ public:
 private:
 	uint16_t _top = 0; // ICR1 top value
 	uint16_t _presBits = 0; // CS bits in TCCR1B
+	float _dutyPercent[2] = {0.0f, 0.0f};
+	bool _configured = false;
+	uint16_t percentToCounts(float percent, uint16_t top) const;
 	void setDuty(uint8_t channel, float percent);
 	void _applyDuty(uint8_t channel, uint16_t value);
 };
