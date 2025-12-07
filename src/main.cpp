@@ -8,7 +8,7 @@
 #include "pwm.h"
 
 namespace {
-  constexpr float kTimerTickHz = 1000.0f; // Timer2 tick frequency
+  constexpr float kTimerTickHz = 10000.0f; // Timer2 tick frequency
 
   Timer2Driver timer2;
   AnalogSampler analogSampler;
@@ -41,8 +41,9 @@ void setup() {
 
   encoder.begin(4, 5, 6, 7);
 
-  pwm.set(0, 1000.0f, 50.0f);
-  pwm.set(1, 1000.0f, 25.0f);
+  pwm.begin(100.0f);
+  pwm.setDuty(0, 50.0f);
+  pwm.setDuty(1, 25.0f);
 
   timer2.beginHz(kTimerTickHz);
   timer2.attachCallback(timerTickHandler);

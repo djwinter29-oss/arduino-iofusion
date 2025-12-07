@@ -7,11 +7,11 @@
 class Timer1PWM {
 public:
 	Timer1PWM();
-	// Configure channel with requested frequency (Hz) and duty percent (0..100).
-	// Note: Timer1 is a single hardware timer — frequency is shared across both channels.
-	// Calling `set` will reconfigure the timer frequency (affecting the other channel).
-	// Returns true on success.
-	bool set(uint8_t channel, float freqHz, float percent);
+	// Configure Timer1 to generate PWM on OC1A/OC1B at the requested frequency.
+	// Duty for each channel must be set separately via setDuty().
+	bool begin(float freqHz);
+	// Update duty cycle (0..100%) for a specific channel. 0% keeps the pin low.
+	void setDuty(uint8_t channel, float percent);
 	// Stop PWM and release pins
 	void stop();
 
@@ -21,7 +21,6 @@ private:
 	float _dutyPercent[2] = {0.0f, 0.0f};
 	bool _configured = false;
 	uint16_t percentToCounts(float percent, uint16_t top) const;
-	void setDuty(uint8_t channel, float percent);
 	void _applyDuty(uint8_t channel, uint16_t value);
 };
 

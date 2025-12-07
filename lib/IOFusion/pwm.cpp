@@ -2,10 +2,8 @@
 
 Timer1PWM::Timer1PWM() {}
 
-bool Timer1PWM::set(uint8_t channel, float freqHz, float percent) {
-  if (channel > 1 || freqHz <= 0.0f) return false;
-  if (percent < 0.0f) percent = 0.0f;
-  if (percent > 100.0f) percent = 100.0f;
+bool Timer1PWM::begin(float freqHz) {
+  if (freqHz <= 0.0f) return false;
 
   // Determine Timer1 top and prescaler for requested frequency.
   const uint16_t pres[] = {1,8,64,256,1024};
@@ -15,7 +13,7 @@ bool Timer1PWM::set(uint8_t channel, float freqHz, float percent) {
   for (uint8_t i = 0; i < sizeof(pres)/sizeof(pres[0]); ++i) {
     float t = ((float)F / (pres[i] * freqHz)) - 1.0f;
     if (t > 0.0f && t <= 65535.0f) {
-      top = (uint32_t)(t + 0.5f);
+      top = static_cast<uint32_t>(t + 0.5f);
       chosenPres = pres[i];
       break;
     }
@@ -33,40 +31,33 @@ bool Timer1PWM::set(uint8_t channel, float freqHz, float percent) {
     default: newPresBits = _BV(CS10); break;
   }
 
-  bool freqChanged = (!_configured) || (_top != newTop) || (_presBits != newPresBits);
-
-  // Update stored duty before we compute target counts for both channels.
-  _dutyPercent[channel] = percent;
-  uint16_t targetTop = freqChanged ? newTop : _top;
   uint16_t dutyCounts[2];
   for (uint8_t i = 0; i < 2; ++i) {
-    dutyCounts[i] = percentToCounts(_dutyPercent[i], targetTop);
+    dutyCounts[i] = percentToCounts(_dutyPercent[i], newTop);
   }
 
   noInterrupts();
-  if (!_configured) {
-    pinMode(9, OUTPUT);
-    pinMode(10, OUTPUT);
-    // Fast PWM, TOP = ICR1 (WGM13:0 = 14), non-inverting on both channels.
-    TCCR1A = _BV(COM1A1) | _BV(COM1B1) | _BV(WGM11);
-    TCCR1B = _BV(WGM13) | _BV(WGM12);
-  }
+  pinMode(9, OUTPUT);
+  pinMode(10, OUTPUT);
 
-  if (freqChanged) {
-    ICR1 = newTop; // double-buffered, takes effect at BOTTOM
-    uint8_t tccr1b = TCCR1B;
-    tccr1b &= ~(_BV(CS12) | _BV(CS11) | _BV(CS10));
-    tccr1b |= newPresBits;
-    TCCR1B = tccr1b;
-    _top = newTop;
-    _presBits = newPresBits;
-  }
+  // Fast PWM, TOP = ICR1 (mode 14), non-inverting on both channels.
+  TCCR1A = _BV(COM1A1) | _BV(COM1B1) | _BV(WGM11);
+  uint8_t tccr1b = _BV(WGM13) | _BV(WGM12);
+  TCCR1B = tccr1b;
 
+  ICR1 = newTop;
   _applyDuty(0, dutyCounts[0]);
   _applyDuty(1, dutyCounts[1]);
+  TCNT1 = 0;
+
+  tccr1b |= newPresBits;
+  TCCR1B = tccr1b;
+
+  _top = newTop;
+  _presBits = newPresBits;
+  _configured = true;
   interrupts();
 
-  _configured = true;
   return true;
 }
 
