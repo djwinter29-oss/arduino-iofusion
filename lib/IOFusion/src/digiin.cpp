@@ -4,6 +4,7 @@ DigiIn::DigiIn() {}
 
 bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, float tickHz, bool usePullup) {
   if (count == 0 || count > MAX_PINS) return false;
+  if (windowTicks == 0 || tickHz <= 0.0f) return false;
   _pinCount = count;
   _windowTicks = windowTicks;
   _tickHz = tickHz;
@@ -11,21 +12,25 @@ bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, flo
     _pins[i] = pins[i];
     if (usePullup) pinMode(_pins[i], INPUT_PULLUP);
     else pinMode(_pins[i], INPUT);
+    _pinPortIn[i] = portInputRegister(digitalPinToPort(_pins[i]));
+    _pinMask[i] = digitalPinToBitMask(_pins[i]);
     _edgeCnt[i] = 0;
     _highCnt[i] = 0;
-    _lastState[i] = digitalRead(_pins[i]);
+    _lastState[i] = (_pinPortIn[i] && ((*_pinPortIn[i] & _pinMask[i]) != 0)) ? 1 : 0;
     _freq[i] = 0.0f;
     _duty[i] = 0.0f;
   }
   _samplesInWindow = 0;
+  _windowReady = false;
   return true;
 }
 
 void DigiIn::onTick() {
   // Short ISR-safe sampling
+  if (_windowReady) return;
   uint8_t localStates[MAX_PINS];
   for (uint8_t i = 0; i < _pinCount; ++i) {
-    localStates[i] = digitalRead(_pins[i]);
+    localStates[i] = (_pinPortIn[i] && ((*_pinPortIn[i] & _pinMask[i]) != 0)) ? 1 : 0;
   }
   // update counts
   for (uint8_t i = 0; i < _pinCount; ++i) {
@@ -37,18 +42,41 @@ void DigiIn::onTick() {
   }
   _samplesInWindow++;
   if (_samplesInWindow >= _windowTicks) {
-    // compute results (do minimal floating math in ISR; acceptable for small windows)
+    _windowReady = true;
+  }
+}
+
+void DigiIn::updateIfReady() {
+  if (!_windowReady) return;
+
+  uint16_t samples = 0;
+  uint16_t edgeCnt[MAX_PINS];
+  uint16_t highCnt[MAX_PINS];
+
+  noInterrupts();
+  samples = _samplesInWindow;
+  for (uint8_t i = 0; i < _pinCount; ++i) {
+    edgeCnt[i] = _edgeCnt[i];
+    highCnt[i] = _highCnt[i];
+    _edgeCnt[i] = 0;
+    _highCnt[i] = 0;
+  }
+  _samplesInWindow = 0;
+  _windowReady = false;
+  interrupts();
+
+  if (samples == 0 || _tickHz <= 0.0f) {
     for (uint8_t i = 0; i < _pinCount; ++i) {
-      float periodSec = ((float)_windowTicks) / _tickHz; // seconds spanned
-      // frequency = edges per window / period
-      _freq[i] = (float)_edgeCnt[i] / periodSec;
+      _freq[i] = 0.0f;
       _duty[i] = 0.0f;
-      if (_samplesInWindow > 0) _duty[i] = (100.0f * (float)_highCnt[i]) / (float)_samplesInWindow;
-      // reset counters for next window
-      _edgeCnt[i] = 0;
-      _highCnt[i] = 0;
     }
-    _samplesInWindow = 0;
+    return;
+  }
+
+  float periodSec = ((float)samples) / _tickHz;
+  for (uint8_t i = 0; i < _pinCount; ++i) {
+    _freq[i] = (float)edgeCnt[i] / periodSec;
+    _duty[i] = (100.0f * (float)highCnt[i]) / (float)samples;
   }
 }
 

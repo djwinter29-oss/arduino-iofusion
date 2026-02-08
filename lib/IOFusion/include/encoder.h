@@ -23,6 +23,10 @@ private:
 	uint8_t _state = 0;
 	uint8_t _pinUp = 255;
 	uint8_t _pinDown = 255;
+	volatile uint8_t* _upPortIn = nullptr;
+	volatile uint8_t* _downPortIn = nullptr;
+	uint8_t _upMask = 0;
+	uint8_t _downMask = 0;
 	volatile int32_t _position = 0;
 	volatile bool _directionUp = true;
 };

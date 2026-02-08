@@ -16,6 +16,10 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
   _pinDown = down;
   pinMode(_pinUp, INPUT_PULLUP);
   pinMode(_pinDown, INPUT_PULLUP);
+  _upPortIn = portInputRegister(digitalPinToPort(_pinUp));
+  _downPortIn = portInputRegister(digitalPinToPort(_pinDown));
+  _upMask = digitalPinToBitMask(_pinUp);
+  _downMask = digitalPinToBitMask(_pinDown);
   noInterrupts();
   _position = 0;
   _directionUp = true;
@@ -26,8 +30,8 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
 
 void EncoderGenerator::onTick() {
   // Level-triggered sampling: if up is HIGH and down LOW -> step forward each tick
-  bool upHigh = digitalRead(_pinUp) == HIGH;
-  bool downHigh = digitalRead(_pinDown) == HIGH;
+  bool upHigh = (_upPortIn && ((*_upPortIn & _upMask) != 0));
+  bool downHigh = (_downPortIn && ((*_downPortIn & _downMask) != 0));
   bool stepped = false;
   if (upHigh && !downHigh) {
     _directionUp = true;
