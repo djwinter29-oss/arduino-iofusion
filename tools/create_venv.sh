@@ -8,7 +8,7 @@ set -euo pipefail
 #   ./create_venv.sh                # installs default packages (platformio)
 #   ./create_venv.sh pkg1 pkg2 ...  # installs specified packages
 
-ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(pwd)"
 VENV_DIR="$ROOT_DIR/.venv"
 
 if [ "$EUID" -eq 0 ]; then
@@ -32,7 +32,7 @@ echo "Activating venv"
 source "$VENV_DIR/bin/activate"
 
 echo "Installing packages from requirements.txt"
-pip install -r requirements.txt
+pip install -r "$ROOT_DIR/requirements.txt"
 
 echo "Installation complete. To activate the venv, run:"
 echo "  source $VENV_DIR/bin/activate"
