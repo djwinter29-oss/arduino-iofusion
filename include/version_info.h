@@ -1,2 +1,2 @@
 #pragma once
-#define FW_VERSION "26.02.08+gc56e6f6"
+#define FW_VERSION "26.02.08+ged5631e"

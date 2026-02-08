@@ -1,7 +1,8 @@
 #include <Arduino.h>
 
-#include "timer.h"
+
 #include "version_info.h"
+#include "timer.h"
 #include "analog.h"
 #include "digiin.h"
 #include "encoder.h"

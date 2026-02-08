@@ -74,4 +74,3 @@ bool EncoderGenerator::getDirection() {
   interrupts();
   return d;
 }
-
