@@ -88,3 +88,12 @@ Upload to a connected Uno:
 ```bash
 pio run --target upload
 ```
+
+## Unit tests and coverage
+
+Host-based unit tests (IOFusion library) run under a native build with mocked Arduino APIs:
+
+- Windows: run [tools/coverage.ps1](tools/coverage.ps1)
+- Linux/macOS: run [tools/coverage.sh](tools/coverage.sh)
+
+Reports are generated in the `coverage/` directory (`index.html` and `coverage.xml`).
