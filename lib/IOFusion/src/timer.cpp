@@ -18,15 +18,18 @@ uint16_t Timer2Driver::beginHz(float freqHz) {
   const uint16_t presVals[] = {1, 8, 32, 64, 128, 256, 1024};
   uint16_t chosenOCR = 0;
   uint16_t chosenPres = 1;
+  bool found = false;
   for (uint8_t i = 0; i < sizeof(presVals)/sizeof(presVals[0]); ++i) {
     float pres = static_cast<float>(presVals[i]);
     float ocr = (F_CPU32 / (pres * freqHz)) - 1.0f;
-    if (ocr <= 255.0f) {
+    if (ocr >= 0.0f && ocr <= 255.0f) {
       chosenOCR = (uint16_t)(ocr + 0.5f);
       chosenPres = presVals[i];
+      found = true;
       break;
     }
   }
+  if (!found) return 0;
 
   // Configure CTC mode
   TCCR2A = _BV(WGM21);

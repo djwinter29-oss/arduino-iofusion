@@ -46,6 +46,11 @@ uint8_t AnalogSampler::getChannelCount() const { return _channelCount; }
 
 float AnalogSampler::getValue(uint8_t idx) const {
   if (idx >= _channelCount) return 0.0f;
-  // ADC range is 0..1023, assume Vref = 5.0V
-  return ((float)_lastValues[idx] * 5.0f) / 1023.0f;
+  // ADC range is 0..1023, scale by configured Vref
+  return ((float)_lastValues[idx] * _vref) / 1023.0f;
+}
+
+void AnalogSampler::setVref(float vref) {
+  if (vref <= 0.0f) return;
+  _vref = vref;
 }

@@ -19,6 +19,8 @@ public:
 	uint8_t getChannelCount() const;
 	// Returns measured voltage in volts (e.g. 0.0 .. Vref)
 	float getValue(uint8_t idx) const;
+	// Configure reference voltage used for scaling (default 5.0V)
+	void setVref(float vref);
 
 private:
 	static const uint8_t MAX_CHANNELS = 6;
@@ -26,6 +28,7 @@ private:
 	uint8_t _channelCount = 0;
 	volatile bool _sampleRequested = false;
 	int _lastValues[MAX_CHANNELS];
+	float _vref = 5.0f;
 };
 
 #endif // IOFUSION_ANALOG_H

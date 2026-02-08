@@ -12,6 +12,10 @@ IOFusion is a small set of hardware helpers focused on deterministic, timer-driv
 - `EncoderGenerator` produces a quadrature output and tracks position/direction.
 - `Timer1PWM` configures Timer1 PWM on OC1A/OC1B (pins 9/10).
 
+### Encoder generator semantics
+
+`EncoderGenerator` is a **signal generator** driven by two level inputs (`up`, `down`). It advances one quadrature step per tick when `up` is HIGH and `down` is LOW, and steps backward when `down` is HIGH and `up` is LOW. It does **not** decode a physical quadrature encoder.
+
 ### Data flow
 
 
@@ -39,6 +43,14 @@ flowchart TD
 - **ISR path:** minimal work only (flags + counters). No floating-point math.
 - **Main loop:** performs ADC reads and computes frequency/duty, ensuring the ISR stays fast.
 
+#### Timing contract (important)
+
+To keep measurements accurate, `loop()` should run frequently. If the loop stalls for long periods, analog sampling and digital window updates will lag. As a rule of thumb, keep worst-case loop latency well below the digital measurement window duration.
+
+#### Analog reference voltage
+
+`AnalogSampler` scales readings using a configurable reference voltage (default 5.0V). If your board uses a different $V_{ref}$, set it at startup with `analogSampler.setVref(<volts>)` after `begin()`.
+
 ### Source layout
 
 - Library headers: [lib/IOFusion/include](lib/IOFusion/include)
@@ -58,6 +70,10 @@ Supported commands:
 - `pwm-freq <hz>` — sets Timer1 PWM frequency.
 - `pwm-duty <ch> <pct>` — sets PWM duty for channel 0 or 1.
 - `help` — prints a short help string.
+
+#### Error reporting
+
+Initialization failures are reported as JSON errors on Serial (e.g., `{"error":"pwm init failed"}`) to aid diagnosis.
 
 ## Build and upload
 

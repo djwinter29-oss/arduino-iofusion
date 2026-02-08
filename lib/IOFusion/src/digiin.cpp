@@ -12,8 +12,10 @@ bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, flo
     _pins[i] = pins[i];
     if (usePullup) pinMode(_pins[i], INPUT_PULLUP);
     else pinMode(_pins[i], INPUT);
-    _pinPortIn[i] = portInputRegister(digitalPinToPort(_pins[i]));
+    uint8_t port = digitalPinToPort(_pins[i]);
+    _pinPortIn[i] = portInputRegister(port);
     _pinMask[i] = digitalPinToBitMask(_pins[i]);
+    if (port == NOT_A_PIN || _pinPortIn[i] == nullptr || _pinMask[i] == 0) return false;
     _edgeCnt[i] = 0;
     _highCnt[i] = 0;
     _lastState[i] = (_pinPortIn[i] && ((*_pinPortIn[i] & _pinMask[i]) != 0)) ? 1 : 0;
@@ -28,13 +30,8 @@ bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, flo
 void DigiIn::onTick() {
   // Short ISR-safe sampling
   if (_windowReady) return;
-  uint8_t localStates[MAX_PINS];
   for (uint8_t i = 0; i < _pinCount; ++i) {
-    localStates[i] = (_pinPortIn[i] && ((*_pinPortIn[i] & _pinMask[i]) != 0)) ? 1 : 0;
-  }
-  // update counts
-  for (uint8_t i = 0; i < _pinCount; ++i) {
-    uint8_t s = localStates[i];
+    uint8_t s = (_pinPortIn[i] && ((*_pinPortIn[i] & _pinMask[i]) != 0)) ? 1 : 0;
     if (s) _highCnt[i]++;
     // detect rising edge
     if (s && !_lastState[i]) _edgeCnt[i]++;

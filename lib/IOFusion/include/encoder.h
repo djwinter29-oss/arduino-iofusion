@@ -21,6 +21,10 @@ private:
 	uint8_t _pinA = 255;
 	uint8_t _pinB = 255;
 	uint8_t _state = 0;
+	volatile uint8_t* _portAOut = nullptr;
+	volatile uint8_t* _portBOut = nullptr;
+	uint8_t _maskA = 0;
+	uint8_t _maskB = 0;
 	uint8_t _pinUp = 255;
 	uint8_t _pinDown = 255;
 	volatile uint8_t* _upPortIn = nullptr;

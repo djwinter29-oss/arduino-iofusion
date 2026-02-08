@@ -93,11 +93,13 @@ void CmdLine::handleCommand(char* cmd) {
       Serial.println(F("{\"error\":\"missing frequency\"}"));
       return;
     }
-    float freq = atof(tokens[1]);
-    if (freq <= 0.0f) {
+    char* endp = nullptr;
+    double freqVal = strtod(tokens[1], &endp);
+    if (endp == tokens[1] || *endp != '\0' || freqVal <= 0.0) {
       Serial.println(F("{\"error\":\"invalid frequency\"}"));
       return;
     }
+    float freq = static_cast<float>(freqVal);
     if (_pwm.begin(freq)) {
       Serial.println(F("{\"status\":\"ok\"}"));
     } else {
@@ -111,12 +113,24 @@ void CmdLine::handleCommand(char* cmd) {
       Serial.println(F("{\"error\":\"missing duty parameters\"}"));
       return;
     }
-    int channel = atoi(tokens[1]);
+    char* endp = nullptr;
+    long channelVal = strtol(tokens[1], &endp, 10);
+    if (endp == tokens[1] || *endp != '\0') {
+      Serial.println(F("{\"error\":\"invalid channel\"}"));
+      return;
+    }
+    int channel = static_cast<int>(channelVal);
     if (channel < 0 || channel > 1) {
       Serial.println(F("{\"error\":\"invalid channel\"}"));
       return;
     }
-    float duty = atof(tokens[2]);
+    endp = nullptr;
+    double dutyVal = strtod(tokens[2], &endp);
+    if (endp == tokens[2] || *endp != '\0') {
+      Serial.println(F("{\"error\":\"invalid duty\"}"));
+      return;
+    }
+    float duty = static_cast<float>(dutyVal);
     _pwm.setDuty(static_cast<uint8_t>(channel), duty);
     Serial.println(F("{\"status\":\"ok\"}"));
     return;
