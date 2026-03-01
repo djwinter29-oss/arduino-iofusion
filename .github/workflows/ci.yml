@@ -5,16 +5,37 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  style:
+    name: Code style (clang-format)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+      - name: Check formatting
+        run: |
+          clang-format --version
+          # Check only C/C++ sources/headers
+          files=$(git ls-files '*.c' '*.cpp' '*.h' '*.hpp')
+          clang-format --dry-run --Werror $files
+
+  test:
+    name: Unit tests (native) + coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
@@ -31,8 +52,115 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Show PlatformIO version
-        run: pio --version
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-
 
       - name: Run PlatformIO native tests
-        run: pio test -e native -v
+        run: |
+          pio --version
+          pio test -e native -v
+
+      - name: Generate coverage (lcov + html)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov
+          chmod +x tools/coverage.sh
+          ./tools/coverage.sh
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+
+  docs:
+    name: Doxygen (HTML + PDF)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install doxygen deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz texlive-latex-base texlive-latex-recommended texlive-latex-extra latexmk ghostscript
+
+      - name: Build doxygen
+        run: |
+          doxygen --version
+          doxygen Doxyfile
+          # Build PDF from latex output
+          cd docs/doxygen/latex
+          latexmk -pdf -interaction=nonstopmode -halt-on-error refman.tex
+
+      - name: Upload doxygen HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: doxygen-html
+          path: docs/doxygen/html/
+
+      - name: Upload doxygen PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: doxygen-pdf
+          path: docs/doxygen/latex/refman.pdf
+
+  build:
+    name: Build firmware binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PlatformIO
+        run: |
+          python -m pip install -U pip
+          pip install -r requirements.txt
+          pio --version
+      - name: Build default env (uno)
+        run: |
+          pio run -e uno -v
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-uno
+          path: |
+            .pio/build/uno/*.hex
+            .pio/build/uno/*.elf
+
+  package:
+    name: Package (universal)
+    needs: [style, test, docs, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/_artifacts
+
+      - name: Create universal package (zip)
+        run: |
+          mkdir -p dist
+          VERSION=$(python tools/git_version.py --version 2>/dev/null || true)
+          if [ -z "$VERSION" ]; then VERSION=${GITHUB_SHA::7}; fi
+          PKG=dist/arduino-iofusion-${VERSION}.zip
+          (cd dist/_artifacts && zip -r ../tmp_artifacts.zip .)
+          zip -r "$PKG" \
+            README.md platformio.ini Doxyfile lib src test tools requirements.txt .github \
+            dist/_artifacts
+          echo "PKG=$PKG" >> $GITHUB_ENV
+
+      - name: Upload universal package
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-package
+          path: ${{ env.PKG }}
