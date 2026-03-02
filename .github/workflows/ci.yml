@@ -92,6 +92,7 @@ jobs:
 
       - name: Build doxygen
         run: |
+          mkdir -p docs/doxygen
           doxygen --version
           doxygen Doxyfile
           # Build PDF from latex output
