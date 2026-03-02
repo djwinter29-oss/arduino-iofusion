@@ -4,7 +4,7 @@
 #include <cstdint>
 
 class EncoderGenerator {
-public:
+ public:
   EncoderGenerator() = default;
 
   void setState(int32_t position, bool directionUp) {
@@ -15,9 +15,9 @@ public:
   int32_t getPosition() { return _position; }
   bool getDirection() { return _directionUp; }
 
-private:
+ private:
   int32_t _position = 0;
   bool _directionUp = true;
 };
 
-#endif // MOCK_ENCODER_H
+#endif  // MOCK_ENCODER_H

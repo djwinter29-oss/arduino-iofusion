@@ -1,3 +1,18 @@
+// NOTE: PWM driver is AVR-specific. For native/unit-test builds we provide stubs.
+
+#if defined(UNIT_TEST)
+#include "pwm.h"
+#include <stdint.h>
+
+bool Timer1PWM::begin(float) {
+  return true;
+}
+void Timer1PWM::stop() {}
+void Timer1PWM::setDuty(uint8_t, float) {}
+
+#endif
+
+#if !defined(UNIT_TEST)
 #include "pwm.h"
 
 Timer1PWM::Timer1PWM() {}
@@ -6,11 +21,11 @@ bool Timer1PWM::begin(float freqHz) {
   if (freqHz <= 0.0f) return false;
 
   // Determine Timer1 top and prescaler for requested frequency.
-  const uint16_t pres[] = {1,8,64,256,1024};
+  const uint16_t pres[] = {1, 8, 64, 256, 1024};
   const uint32_t F = F_CPU;
   uint32_t top = 0;
   uint16_t chosenPres = 1;
-  for (uint8_t i = 0; i < sizeof(pres)/sizeof(pres[0]); ++i) {
+  for (uint8_t i = 0; i < sizeof(pres) / sizeof(pres[0]); ++i) {
     float t = ((float)F / (pres[i] * freqHz)) - 1.0f;
     if (t > 0.0f && t <= 65535.0f) {
       top = static_cast<uint32_t>(t + 0.5f);
@@ -23,12 +38,24 @@ bool Timer1PWM::begin(float freqHz) {
   uint16_t newTop = static_cast<uint16_t>(top);
   uint16_t newPresBits = 0;
   switch (chosenPres) {
-    case 1: newPresBits = _BV(CS10); break;
-    case 8: newPresBits = _BV(CS11); break;
-    case 64: newPresBits = _BV(CS11) | _BV(CS10); break;
-    case 256: newPresBits = _BV(CS12); break;
-    case 1024: newPresBits = _BV(CS12) | _BV(CS10); break;
-    default: newPresBits = _BV(CS10); break;
+    case 1:
+      newPresBits = _BV(CS10);
+      break;
+    case 8:
+      newPresBits = _BV(CS11);
+      break;
+    case 64:
+      newPresBits = _BV(CS11) | _BV(CS10);
+      break;
+    case 256:
+      newPresBits = _BV(CS12);
+      break;
+    case 1024:
+      newPresBits = _BV(CS12) | _BV(CS10);
+      break;
+    default:
+      newPresBits = _BV(CS10);
+      break;
   }
 
   uint16_t dutyCounts[2];
@@ -90,8 +117,10 @@ void Timer1PWM::setDuty(uint8_t channel, float percent) {
 }
 
 void Timer1PWM::_applyDuty(uint8_t channel, uint16_t value) {
-  if (channel == 0) OCR1A = value;
-  else if (channel == 1) OCR1B = value;
+  if (channel == 0)
+    OCR1A = value;
+  else if (channel == 1)
+    OCR1B = value;
 }
 
 uint16_t Timer1PWM::percentToCounts(float percent, uint16_t top) const {
@@ -102,3 +131,4 @@ uint16_t Timer1PWM::percentToCounts(float percent, uint16_t top) const {
   if (v > top) v = top;
   return (uint16_t)v;
 }
+#endif  // !UNIT_TEST

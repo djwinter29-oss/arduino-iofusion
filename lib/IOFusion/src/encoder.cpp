@@ -14,7 +14,9 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
   _portBOut = portOutputRegister(portB);
   _maskA = digitalPinToBitMask(_pinA);
   _maskB = digitalPinToBitMask(_pinB);
-  if (portA == NOT_A_PIN || portB == NOT_A_PIN || _portAOut == nullptr || _portBOut == nullptr || _maskA == 0 || _maskB == 0) return false;
+  if (portA == NOT_A_PIN || portB == NOT_A_PIN || _portAOut == nullptr || _portBOut == nullptr ||
+      _maskA == 0 || _maskB == 0)
+    return false;
   if (_portAOut) *_portAOut &= ~_maskA;
   if (_portBOut) *_portBOut &= ~_maskB;
   _state = 0;
@@ -29,7 +31,9 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
   _downPortIn = portInputRegister(portDown);
   _upMask = digitalPinToBitMask(_pinUp);
   _downMask = digitalPinToBitMask(_pinDown);
-  if (portUp == NOT_A_PIN || portDown == NOT_A_PIN || _upPortIn == nullptr || _downPortIn == nullptr || _upMask == 0 || _downMask == 0) return false;
+  if (portUp == NOT_A_PIN || portDown == NOT_A_PIN || _upPortIn == nullptr ||
+      _downPortIn == nullptr || _upMask == 0 || _downMask == 0)
+    return false;
   noInterrupts();
   _position = 0;
   _directionUp = true;
@@ -60,12 +64,16 @@ void EncoderGenerator::onTick() {
   if (stepped) {
     uint8_t s = _state;
     if (_portAOut) {
-      if (s == 2 || s == 3) *_portAOut |= _maskA;
-      else *_portAOut &= ~_maskA;
+      if (s == 2 || s == 3)
+        *_portAOut |= _maskA;
+      else
+        *_portAOut &= ~_maskA;
     }
     if (_portBOut) {
-      if (s == 1 || s == 2) *_portBOut |= _maskB;
-      else *_portBOut &= ~_maskB;
+      if (s == 1 || s == 2)
+        *_portBOut |= _maskB;
+      else
+        *_portBOut &= ~_maskB;
     }
   }
 }

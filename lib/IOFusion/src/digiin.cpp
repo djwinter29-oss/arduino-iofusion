@@ -2,7 +2,8 @@
 
 DigiIn::DigiIn() {}
 
-bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, float tickHz, bool usePullup) {
+bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, float tickHz,
+                   bool usePullup) {
   if (count == 0 || count > MAX_PINS) return false;
   if (windowTicks == 0 || tickHz <= 0.0f) return false;
   _pinCount = count;
@@ -10,8 +11,10 @@ bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, flo
   _tickHz = tickHz;
   for (uint8_t i = 0; i < _pinCount; ++i) {
     _pins[i] = pins[i];
-    if (usePullup) pinMode(_pins[i], INPUT_PULLUP);
-    else pinMode(_pins[i], INPUT);
+    if (usePullup)
+      pinMode(_pins[i], INPUT_PULLUP);
+    else
+      pinMode(_pins[i], INPUT);
     uint8_t port = digitalPinToPort(_pins[i]);
     _pinPortIn[i] = portInputRegister(port);
     _pinMask[i] = digitalPinToBitMask(_pins[i]);
@@ -77,7 +80,9 @@ void DigiIn::updateIfReady() {
   }
 }
 
-uint8_t DigiIn::getPinCount() const { return _pinCount; }
+uint8_t DigiIn::getPinCount() const {
+  return _pinCount;
+}
 
 float DigiIn::getFrequency(uint8_t idx) const {
   if (idx >= _pinCount) return 0.0f;

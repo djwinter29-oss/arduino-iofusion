@@ -4,7 +4,7 @@
 #include <cstdint>
 
 class DigiIn {
-public:
+ public:
   DigiIn() = default;
 
   void setValues(const float* freq, const float* duty, uint8_t count) {
@@ -27,11 +27,11 @@ public:
     return _duty[idx];
   }
 
-private:
+ private:
   static constexpr uint8_t kMax = 8;
   float _freq[kMax] = {0.0f};
   float _duty[kMax] = {0.0f};
   uint8_t _count = 0;
 };
 
-#endif // MOCK_DIGIIN_H
+#endif  // MOCK_DIGIIN_H
