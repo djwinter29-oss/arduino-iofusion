@@ -4,6 +4,8 @@
 #include "pwm.h"
 #include <stdint.h>
 
+Timer1PWM::Timer1PWM() {}
+
 bool Timer1PWM::begin(float) {
   return true;
 }

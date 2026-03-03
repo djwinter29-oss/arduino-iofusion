@@ -3,6 +3,7 @@
 > Docs index:
 > - Architecture: [ARCHITECTURE.md](ARCHITECTURE.md)
 > - PlatformIO library install/publish/use: [PLATFORMIO_LIBRARY.md](PLATFORMIO_LIBRARY.md)
+> - Coverage limitations: [COVERAGE_LIMITATIONS.md](COVERAGE_LIMITATIONS.md)
 
 Basic PlatformIO project targeting the Arduino Uno (ATmega328P).
 

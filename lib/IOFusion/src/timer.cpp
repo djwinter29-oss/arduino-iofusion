@@ -4,6 +4,8 @@
 #include "timer.h"
 #include <stdint.h>
 
+Timer2Driver::Timer2Driver() {}
+
 uint16_t Timer2Driver::beginHz(float) {
   return 0;
 }
