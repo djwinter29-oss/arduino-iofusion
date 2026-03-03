@@ -15,3 +15,9 @@ dist/
 # VSCode
 .vscode/
 include/version_info.h
+
+# Local/generated artifacts
+artifacts/
+docs/
+coverage/
+

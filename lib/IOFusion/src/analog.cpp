@@ -8,7 +8,7 @@ bool AnalogSampler::begin(const uint8_t* channels, uint8_t channelCount) {
   if (channelCount == 0 || channelCount > MAX_CHANNELS) return false;
   for (uint8_t i = 0; i < channelCount; ++i) {
     uint8_t c = channels[i];
-    if (c > 5) return false; // only A0..A5 on typical AVR
+    if (c > 5) return false;  // only A0..A5 on typical AVR
     _channels[i] = c;
   }
   _channelCount = channelCount;
@@ -42,7 +42,9 @@ void AnalogSampler::sampleIfDue() {
   }
 }
 
-uint8_t AnalogSampler::getChannelCount() const { return _channelCount; }
+uint8_t AnalogSampler::getChannelCount() const {
+  return _channelCount;
+}
 
 float AnalogSampler::getValue(uint8_t idx) const {
   if (idx >= _channelCount) return 0.0f;

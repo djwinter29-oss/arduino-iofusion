@@ -1,25 +1,20 @@
 #include "cmdline.h"
 
 #include <ctype.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-CmdLine::CmdLine(AnalogSampler& analog,
-                 DigiIn& digi,
-                 EncoderGenerator& encoder,
-                 Timer1PWM& pwm,
-                 const uint8_t* analogPins,
-                 uint8_t analogCount,
-                 const uint8_t* digitalPins,
+CmdLine::CmdLine(AnalogSampler& analog, DigiIn& digi, EncoderGenerator& encoder, Timer1PWM& pwm,
+                 const uint8_t* analogPins, uint8_t analogCount, const uint8_t* digitalPins,
                  uint8_t digitalCount)
-  : _analog(analog),
-    _digi(digi),
-    _encoder(encoder),
-    _pwm(pwm),
-    _analogPins(analogPins),
-    _analogCount(analogCount),
-    _digitalPins(digitalPins),
-    _digitalCount(digitalCount) {}
+    : _analog(analog),
+      _digi(digi),
+      _encoder(encoder),
+      _pwm(pwm),
+      _analogPins(analogPins),
+      _analogCount(analogCount),
+      _digitalPins(digitalPins),
+      _digitalCount(digitalCount) {}
 
 void CmdLine::respondAnalog() {
   Serial.print(F("{"));

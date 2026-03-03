@@ -1,0 +1,49 @@
+{
+  "name": "IOFusion",
+  "version": "0.1.0",
+  "description": "Deterministic timer-driven analog/digital sampling and signal generation helpers for Arduino",
+  "keywords": [
+    "arduino",
+    "timer",
+    "sampling",
+    "pwm",
+    "encoder",
+    "frequency",
+    "duty-cycle"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/djwinter29-oss/arduino-iofusion.git"
+  },
+  "authors": [
+    {
+      "name": "djwinter29-oss",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/djwinter29-oss/arduino-iofusion",
+  "frameworks": [
+    "arduino"
+  ],
+  "platforms": [
+    "atmelavr"
+  ],
+  "build": {
+    "includeDir": "lib/IOFusion/include",
+    "srcDir": "lib/IOFusion/src"
+  },
+  "export": {
+    "exclude": [
+      ".github",
+      ".pio",
+      "coverage",
+      "artifacts",
+      "docs",
+      "test",
+      "tools",
+      "src",
+      "requirements.txt"
+    ]
+  }
+}

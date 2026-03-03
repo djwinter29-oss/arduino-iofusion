@@ -1,7 +1,24 @@
+// NOTE: Timer drivers are AVR-specific. For native/unit-test builds we provide stubs.
+
+#if defined(UNIT_TEST)
+#include "timer.h"
+#include <stdint.h>
+
+Timer2Driver::Timer2Driver() {}
+
+uint16_t Timer2Driver::beginHz(float) {
+  return 0;
+}
+void Timer2Driver::stop() {}
+
+#endif
+
+#if !defined(UNIT_TEST)
 #include "timer.h"
 
 // Static member definitions
-volatile Timer2Callback Timer2Driver::_cbs[Timer2Driver::MAX_CALLBACKS] = { nullptr, nullptr, nullptr, nullptr };
+volatile Timer2Callback Timer2Driver::_cbs[Timer2Driver::MAX_CALLBACKS] = {nullptr, nullptr,
+                                                                           nullptr, nullptr};
 
 Timer2Driver::Timer2Driver() {}
 
@@ -10,7 +27,7 @@ uint16_t Timer2Driver::beginHz(float freqHz) {
   // Stop timer2
   TCCR2A = 0;
   TCCR2B = 0;
-  TIMSK2 = 0; // disable interrupts
+  TIMSK2 = 0;  // disable interrupts
 
   const uint32_t F_CPU32 = F_CPU;
   // Timer2 is 8-bit; use CTC mode with OCR2A top (WGM21=1)
@@ -19,7 +36,7 @@ uint16_t Timer2Driver::beginHz(float freqHz) {
   uint16_t chosenOCR = 0;
   uint16_t chosenPres = 1;
   bool found = false;
-  for (uint8_t i = 0; i < sizeof(presVals)/sizeof(presVals[0]); ++i) {
+  for (uint8_t i = 0; i < sizeof(presVals) / sizeof(presVals[0]); ++i) {
     float pres = static_cast<float>(presVals[i]);
     float ocr = (F_CPU32 / (pres * freqHz)) - 1.0f;
     if (ocr >= 0.0f && ocr <= 255.0f) {
@@ -38,14 +55,30 @@ uint16_t Timer2Driver::beginHz(float freqHz) {
   // Set prescaler bits
   uint8_t csbits = 0;
   switch (chosenPres) {
-    case 1: csbits = _BV(CS20); break;
-    case 8: csbits = _BV(CS21); break;
-    case 32: csbits = _BV(CS20) | _BV(CS21); break;
-    case 64: csbits = _BV(CS22); break;
-    case 128: csbits = _BV(CS22) | _BV(CS20); break;
-    case 256: csbits = _BV(CS22) | _BV(CS21); break;
-    case 1024: csbits = _BV(CS22) | _BV(CS21) | _BV(CS20); break;
-    default: csbits = _BV(CS20); break;
+    case 1:
+      csbits = _BV(CS20);
+      break;
+    case 8:
+      csbits = _BV(CS21);
+      break;
+    case 32:
+      csbits = _BV(CS20) | _BV(CS21);
+      break;
+    case 64:
+      csbits = _BV(CS22);
+      break;
+    case 128:
+      csbits = _BV(CS22) | _BV(CS20);
+      break;
+    case 256:
+      csbits = _BV(CS22) | _BV(CS21);
+      break;
+    case 1024:
+      csbits = _BV(CS22) | _BV(CS21) | _BV(CS20);
+      break;
+    default:
+      csbits = _BV(CS20);
+      break;
   }
   TCCR2B = csbits;
 
@@ -97,3 +130,4 @@ void Timer2Driver::handleInterrupt() {
     if (cb) cb();
   }
 }
+#endif  // !UNIT_TEST

@@ -1,5 +1,10 @@
 # PlatformIO Arduino Uno Project
 
+> Docs index:
+> - Architecture: [ARCHITECTURE.md](ARCHITECTURE.md)
+> - PlatformIO library install/publish/use: [PLATFORMIO_LIBRARY.md](PLATFORMIO_LIBRARY.md)
+> - Coverage limitations: [COVERAGE_LIMITATIONS.md](COVERAGE_LIMITATIONS.md)
+
 Basic PlatformIO project targeting the Arduino Uno (ATmega328P).
 
 ## IOFusion design
@@ -74,6 +79,37 @@ Supported commands:
 #### Error reporting
 
 Initialization failures are reported as JSON errors on Serial (e.g., `{"error":"pwm init failed"}`) to aid diagnosis.
+
+## Use as a PlatformIO library
+
+This repository now includes a `library.json` manifest so it can be published to the PlatformIO Registry.
+
+### Local dependency usage (before publishing)
+
+In another PlatformIO project:
+
+```ini
+lib_deps =
+  https://github.com/djwinter29-oss/arduino-iofusion.git
+```
+
+### Publish to PlatformIO Registry
+
+1. Ensure `library.json` fields are correct (name/version/authors/repository).
+2. Bump `version` for each release.
+3. Publish:
+
+```bash
+pio pkg publish --type library
+```
+
+4. If needed, unpublish a bad version:
+
+```bash
+pio pkg unpublish --type library --owner <owner> --name IOFusion --version <x.y.z>
+```
+
+An example sketch is provided at `examples/basic_usage/basic_usage.ino`.
 
 ## Build and upload
 

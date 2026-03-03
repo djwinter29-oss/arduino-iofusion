@@ -9,19 +9,14 @@
 #include "pwm.h"
 
 class CmdLine {
-public:
-  CmdLine(AnalogSampler& analog,
-          DigiIn& digi,
-          EncoderGenerator& encoder,
-          Timer1PWM& pwm,
-          const uint8_t* analogPins,
-          uint8_t analogCount,
-          const uint8_t* digitalPins,
+ public:
+  CmdLine(AnalogSampler& analog, DigiIn& digi, EncoderGenerator& encoder, Timer1PWM& pwm,
+          const uint8_t* analogPins, uint8_t analogCount, const uint8_t* digitalPins,
           uint8_t digitalCount);
 
   void processSerial();
 
-private:
+ private:
   void respondAnalog();
   void respondDigital();
   void respondEncoder();
@@ -44,4 +39,4 @@ private:
   unsigned long _lastByteTimeMs = 0;
 };
 
-#endif // CMDLINE_H
+#endif  // CMDLINE_H

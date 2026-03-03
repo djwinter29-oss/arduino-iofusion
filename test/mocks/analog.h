@@ -4,7 +4,7 @@
 #include <cstdint>
 
 class AnalogSampler {
-public:
+ public:
   AnalogSampler() = default;
 
   void setValues(const float* values, uint8_t count) {
@@ -19,10 +19,10 @@ public:
     return _values[idx];
   }
 
-private:
+ private:
   static constexpr uint8_t kMax = 8;
   float _values[kMax] = {0.0f};
   uint8_t _count = 0;
 };
 
-#endif // MOCK_ANALOG_H
+#endif  // MOCK_ANALOG_H

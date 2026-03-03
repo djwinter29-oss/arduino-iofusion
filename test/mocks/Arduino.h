@@ -1,12 +1,12 @@
 #ifndef MOCK_ARDUINO_H
 #define MOCK_ARDUINO_H
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
-#include <string>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
+#include <string>
 
 #define F(x) x
 #define PROGMEM
@@ -26,8 +26,12 @@ inline void interrupts() {}
 inline void delayMicroseconds(unsigned int) {}
 
 extern unsigned long mockMillis;
-inline unsigned long millis() { return mockMillis; }
-inline void advanceMillis(unsigned long deltaMs) { mockMillis += deltaMs; }
+inline unsigned long millis() {
+  return mockMillis;
+}
+inline void advanceMillis(unsigned long deltaMs) {
+  mockMillis += deltaMs;
+}
 
 extern uint8_t mockPortIn[8];
 extern uint8_t mockPortOut[8];
@@ -58,7 +62,7 @@ inline int analogRead(uint8_t pin) {
 }
 
 class MockSerial {
-public:
+ public:
   void begin(unsigned long) {}
 
   size_t available() const {
@@ -136,7 +140,7 @@ public:
     return n + 1;
   }
 
-private:
+ private:
   std::string _input;
   size_t _readPos = 0;
   std::string _output;
@@ -144,4 +148,4 @@ private:
 
 extern MockSerial Serial;
 
-#endif // MOCK_ARDUINO_H
+#endif  // MOCK_ARDUINO_H

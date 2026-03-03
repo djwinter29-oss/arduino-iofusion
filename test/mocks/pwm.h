@@ -4,7 +4,7 @@
 #include <cstdint>
 
 class Timer1PWM {
-public:
+ public:
   Timer1PWM() = default;
 
   bool begin(float freqHz) {
@@ -24,11 +24,11 @@ public:
   uint8_t lastDutyChannel() const { return _lastDutyChannel; }
   float lastDutyPercent() const { return _lastDutyPercent; }
 
-private:
+ private:
   bool _beginOk = true;
   float _lastBeginFreq = 0.0f;
   uint8_t _lastDutyChannel = 0;
   float _lastDutyPercent = 0.0f;
 };
 
-#endif // MOCK_PWM_H
+#endif  // MOCK_PWM_H

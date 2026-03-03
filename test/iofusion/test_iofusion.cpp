@@ -6,21 +6,23 @@
 #include "encoder.h"
 
 namespace {
-  void setDigitalPin(uint8_t pin, bool high) {
-    uint8_t port = digitalPinToPort(pin);
-    uint8_t mask = digitalPinToBitMask(pin);
-    if (port == NOT_A_PIN) return;
-    if (high) mockPortIn[port] |= mask;
-    else mockPortIn[port] &= static_cast<uint8_t>(~mask);
-  }
+void setDigitalPin(uint8_t pin, bool high) {
+  uint8_t port = digitalPinToPort(pin);
+  uint8_t mask = digitalPinToBitMask(pin);
+  if (port == NOT_A_PIN) return;
+  if (high)
+    mockPortIn[port] |= mask;
+  else
+    mockPortIn[port] &= static_cast<uint8_t>(~mask);
+}
 
-  void clearPorts() {
-    for (uint8_t i = 0; i < 8; ++i) {
-      mockPortIn[i] = 0;
-      mockPortOut[i] = 0;
-    }
+void clearPorts() {
+  for (uint8_t i = 0; i < 8; ++i) {
+    mockPortIn[i] = 0;
+    mockPortOut[i] = 0;
   }
 }
+}  // namespace
 
 void setUp() {
   mockMillis = 0;
@@ -57,13 +59,13 @@ void test_digiin_frequency_and_duty() {
   const uint8_t pins[] = {2};
   TEST_ASSERT_TRUE(digi.begin(pins, 1, 4, 1000.0f, false));
 
-  setDigitalPin(2, false); // sample 1
+  setDigitalPin(2, false);  // sample 1
   digi.onTick();
   setDigitalPin(2, true);  // sample 2
   digi.onTick();
   setDigitalPin(2, true);  // sample 3
   digi.onTick();
-  setDigitalPin(2, false); // sample 4
+  setDigitalPin(2, false);  // sample 4
   digi.onTick();
 
   digi.updateIfReady();
