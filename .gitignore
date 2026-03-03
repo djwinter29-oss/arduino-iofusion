@@ -18,6 +18,6 @@ include/version_info.h
 
 # Local/generated artifacts
 artifacts/
-docs/doxygen/
+docs/
 coverage/
 
