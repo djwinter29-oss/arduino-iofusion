@@ -4,6 +4,8 @@
 > - Architecture: [ARCHITECTURE.md](ARCHITECTURE.md)
 > - PlatformIO library install/publish/use: [PLATFORMIO_LIBRARY.md](PLATFORMIO_LIBRARY.md)
 > - Coverage limitations: [COVERAGE_LIMITATIONS.md](COVERAGE_LIMITATIONS.md)
+> - AVR-first architecture plan: [ARCHITECTURE_AVR_FIRST.md](ARCHITECTURE_AVR_FIRST.md)
+> - Example sketches: [EXAMPLES.md](EXAMPLES.md)
 
 Basic PlatformIO project targeting the Arduino Uno (ATmega328P).
 

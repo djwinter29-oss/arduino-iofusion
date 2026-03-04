@@ -1,6 +1,6 @@
 {
   "name": "IOFusion",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Deterministic timer-driven analog/digital sampling and signal generation helpers for Arduino",
   "keywords": [
     "arduino",
