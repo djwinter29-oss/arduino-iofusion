@@ -49,6 +49,7 @@ void test_analog_sampler_branches() {
 
   TEST_ASSERT_FALSE(sampler.begin(channels, 0));
   TEST_ASSERT_TRUE(sampler.begin(channels, 2));
+  TEST_ASSERT_EQUAL_UINT8(2, sampler.getChannelCount());
 
   sampler.sampleIfDue();  // no-op path
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, sampler.getValue(99));
