@@ -6,15 +6,19 @@ This file lists quick-start examples included in this repository.
 
 - `examples/basic_usage/basic_usage.ino`
   - Minimal initialization of AnalogSampler, DigiIn, EncoderGenerator, and Timer1PWM.
+  - Expected serial: periodic status/JSON-style output after setup.
 
 - `examples/frequency_monitor/frequency_monitor.ino`
   - Measures digital frequency/duty using `DigiIn` + `Timer2Driver` ISR tick.
+  - Expected serial: JSON lines like `{\"d2\":{\"freq\":... ,\"duty\":...},\"d3\":...}`.
 
 - `examples/pwm_dual_channel/pwm_dual_channel.ino`
   - Drives Timer1 PWM on Uno pins 9/10 and sweeps dual-channel duty cycles.
+  - Expected serial: JSON lines such as `{\"dutyA\":10.0,\"dutyB\":90.0}` every 500 ms.
 
 - `examples/encoder_signal_generator/encoder_signal_generator.ino`
   - Generates quadrature A/B output and reports direction/position.
+  - Expected serial: JSON lines like `{\"direction\":\"UP\",\"position\":123}`.
 
 ## Upload notes
 
@@ -47,3 +51,15 @@ pio device monitor -b 115200
 
 - `frequency_monitor` and `encoder_signal_generator` use input pins configured as `INPUT_PULLUP`.
 - For deterministic results, avoid heavy blocking work in `loop()`.
+
+## Troubleshooting (quick)
+
+- No serial output:
+  - Verify monitor baud is `115200`.
+  - Press reset after opening serial monitor.
+- Unexpected pin behavior:
+  - Re-check Uno pin mapping in "Wiring quick notes".
+  - Ensure no other shield/peripheral is using D9/D10 (Timer1 PWM pins).
+- Flat frequency/duty values:
+  - Confirm input signal wiring and common ground.
+  - Confirm `INPUT_PULLUP` logic level expectations.

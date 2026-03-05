@@ -33,6 +33,7 @@ git push origin v0.1.3
    - firmware build (`uno`)
    - set `library.json` version from tag (`v0.1.3` -> `0.1.3`)
    - PlatformIO publish
+   - create/update GitHub Release notes with PlatformIO registry/install info
 
 5. Verify package appears in registry:
 
