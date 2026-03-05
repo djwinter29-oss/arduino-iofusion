@@ -55,13 +55,14 @@ void test_analog_sampler_branches() {
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, sampler.getValue(99));
 
   sampler.setVref(-1.0f);  // ignored path
+  sampler.setVref(3.3f);   // positive path
   sampler.onTick();
   mockAnalogValues[0] = 1023;
   mockAnalogValues[1] = 256;
   sampler.sampleIfDue();
 
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5.0f, sampler.getValue(0));
-  TEST_ASSERT_FLOAT_WITHIN(0.02f, 1.25f, sampler.getValue(1));
+  TEST_ASSERT_FLOAT_WITHIN(0.02f, 3.3f, sampler.getValue(0));
+  TEST_ASSERT_FLOAT_WITHIN(0.02f, (256.0f * 3.3f) / 1023.0f, sampler.getValue(1));
 }
 
 void test_digiin_branches() {
