@@ -1,12 +1,12 @@
 # PlatformIO Arduino Uno Project
 
 > Docs index:
-> - Architecture: [ARCHITECTURE.md](ARCHITECTURE.md)
-> - PlatformIO library install/publish/use: [PLATFORMIO_LIBRARY.md](PLATFORMIO_LIBRARY.md)
-> - Coverage limitations: [COVERAGE_LIMITATIONS.md](COVERAGE_LIMITATIONS.md)
-> - AVR-first architecture plan: [ARCHITECTURE_AVR_FIRST.md](ARCHITECTURE_AVR_FIRST.md)
-> - Example sketches: [EXAMPLES.md](EXAMPLES.md)
-> - Release automation plan: [RELEASE_AUTOMATION_PLAN.md](RELEASE_AUTOMATION_PLAN.md)
+> - Architecture: [docs/md/ARCHITECTURE.md](docs/md/ARCHITECTURE.md)
+> - PlatformIO library install/publish/use: [docs/md/PLATFORMIO_LIBRARY.md](docs/md/PLATFORMIO_LIBRARY.md)
+> - Coverage limitations: [docs/md/COVERAGE_LIMITATIONS.md](docs/md/COVERAGE_LIMITATIONS.md)
+> - AVR-first architecture plan: [docs/md/ARCHITECTURE_AVR_FIRST.md](docs/md/ARCHITECTURE_AVR_FIRST.md)
+> - Example sketches: [docs/md/EXAMPLES.md](docs/md/EXAMPLES.md)
+> - Release automation plan: [docs/md/RELEASE_AUTOMATION_PLAN.md](docs/md/RELEASE_AUTOMATION_PLAN.md)
 
 Basic PlatformIO project targeting the Arduino Uno (ATmega328P).
 
