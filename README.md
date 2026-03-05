@@ -1,12 +1,32 @@
 # PlatformIO Arduino Uno Project
 
-> Docs index:
+> Docs index: [docs/md/INDEX.md](docs/md/INDEX.md)
 > - Architecture: [docs/md/ARCHITECTURE.md](docs/md/ARCHITECTURE.md)
 > - PlatformIO library install/publish/use: [docs/md/PLATFORMIO_LIBRARY.md](docs/md/PLATFORMIO_LIBRARY.md)
 > - Coverage limitations: [docs/md/COVERAGE_LIMITATIONS.md](docs/md/COVERAGE_LIMITATIONS.md)
 > - AVR-first architecture plan: [docs/md/ARCHITECTURE_AVR_FIRST.md](docs/md/ARCHITECTURE_AVR_FIRST.md)
 > - Example sketches: [docs/md/EXAMPLES.md](docs/md/EXAMPLES.md)
 > - Release automation plan: [docs/md/RELEASE_AUTOMATION_PLAN.md](docs/md/RELEASE_AUTOMATION_PLAN.md)
+
+## Quick start (60 seconds)
+
+```bash
+# 1) Clone + install deps
+ git clone https://github.com/djwinter29-oss/arduino-iofusion.git
+ cd arduino-iofusion
+ python3 -m venv .venv && source .venv/bin/activate
+ pip install -r requirements.txt
+
+# 2) Run native unit tests
+ pio test -e native -v
+
+# 3) Build for Arduino Uno
+ pio run -e uno
+
+# 4) Upload an example-ready firmware (main app)
+ pio run -e uno -t upload
+ pio device monitor -b 115200
+```
 
 Basic PlatformIO project targeting the Arduino Uno (ATmega328P).
 
