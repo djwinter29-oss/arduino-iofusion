@@ -25,6 +25,24 @@ pio run -e uno -t upload
 pio device monitor -b 115200
 ```
 
+## Wiring quick notes (Arduino Uno)
+
+- `basic_usage`
+  - Analog: A0, A1
+  - Digital input monitor: D2, D3
+  - Encoder output: A=D8, B=D11, direction controls: UP=D12, DOWN=D13
+  - PWM output: CH0=D9, CH1=D10
+
+- `frequency_monitor`
+  - Measured inputs: D2, D3 (configured as `INPUT_PULLUP`)
+
+- `pwm_dual_channel`
+  - PWM outputs: CH0=D9 (OC1A), CH1=D10 (OC1B)
+
+- `encoder_signal_generator`
+  - Quadrature outputs: A=D8, B=D11
+  - Direction controls (pull-up inputs): UP=D12, DOWN=D13
+
 ## Electrical notes
 
 - `frequency_monitor` and `encoder_signal_generator` use input pins configured as `INPUT_PULLUP`.
