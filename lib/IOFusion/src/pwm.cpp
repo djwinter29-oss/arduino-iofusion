@@ -6,8 +6,8 @@
 
 Timer1PWM::Timer1PWM() {}
 
-bool Timer1PWM::begin(float) {
-  return true;
+bool Timer1PWM::begin(float freqHz) {
+  return (freqHz > 0.0f && freqHz < 1000000.0f);
 }
 void Timer1PWM::stop() {}
 void Timer1PWM::setDuty(uint8_t, float) {}
