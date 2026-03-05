@@ -16,9 +16,9 @@ Workflow file:
 
 ## 2) Per-release flow
 
-1. Update `library.json` version (e.g., `0.1.3`).
+1. Keep `library.json` version as a placeholder (for example `0.0.0`).
 2. Merge changes to `main`.
-3. Create and push matching tag (must match `library.json`):
+3. Create and push a release tag:
 
 ```bash
 git checkout main
@@ -31,7 +31,7 @@ git push origin v0.1.3
 4. GitHub Action runs automatically:
    - native tests
    - firmware build (`uno`)
-   - tag/version consistency check
+   - set `library.json` version from tag (`v0.1.3` -> `0.1.3`)
    - PlatformIO publish
 
 5. Verify package appears in registry:
@@ -46,8 +46,9 @@ Registry page:
 
 ## 3) Safety rules
 
-- Tag must match `library.json.version` exactly (`vX.Y.Z` <-> `X.Y.Z`).
+- Tag must use semantic version format: `vX.Y.Z`.
 - Do not reuse an already published version.
+- `library.json` is auto-updated in the workflow before publishing.
 - If publish is accepted but not visible immediately, wait for registry processing delay.
 
 ## 4) Troubleshooting
@@ -58,11 +59,11 @@ Symptom: workflow fails at login step.
 
 Fix: add `PLATFORMIO_AUTH_TOKEN` in GitHub Actions secrets.
 
-### B) Version mismatch
+### B) Invalid tag format
 
-Symptom: workflow fails at tag/version validation.
+Symptom: workflow fails when setting version from tag.
 
-Fix: set `library.json.version` to match tag version and re-tag with next version.
+Fix: use semantic version tags such as `v0.1.3` (the workflow converts it to `0.1.3`).
 
 ### C) Duplicate version publish
 
