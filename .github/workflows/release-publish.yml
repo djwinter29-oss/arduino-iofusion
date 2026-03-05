@@ -1,5 +1,8 @@
 name: Release Publish (PlatformIO)
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
@@ -80,3 +83,38 @@ jobs:
       - name: Show published package
         run: |
           pio pkg show --type library djwinter29/IOFusion
+
+      - name: Create or update GitHub Release notes with PlatformIO link
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          REGISTRY_URL="https://registry.platformio.org/libraries/djwinter29/IOFusion"
+          INSTALL_SNIPPET='lib_deps =\n  djwinter29/IOFusion@^'"${VERSION}"
+
+          EXTRA_NOTES=$(cat <<EOF
+
+## PlatformIO
+- Registry: ${REGISTRY_URL}
+- Version: ${VERSION}
+
+### Install
+\`\`\`ini
+${INSTALL_SNIPPET}
+\`\`\`
+EOF
+)
+
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            CURRENT_BODY=$(gh release view "${TAG}" --json body --jq '.body // ""')
+            if echo "${CURRENT_BODY}" | grep -q "Registry: ${REGISTRY_URL}"; then
+              echo "Release notes already contain PlatformIO block."
+            else
+              gh release edit "${TAG}" --notes "${CURRENT_BODY}${EXTRA_NOTES}"
+              echo "Updated existing release notes for ${TAG}."
+            fi
+          else
+            gh release create "${TAG}" --title "${TAG}" --notes "${EXTRA_NOTES#\n}"
+            echo "Created release for ${TAG}."
+          fi
