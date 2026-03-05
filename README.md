@@ -6,6 +6,7 @@
 > - Coverage limitations: [COVERAGE_LIMITATIONS.md](COVERAGE_LIMITATIONS.md)
 > - AVR-first architecture plan: [ARCHITECTURE_AVR_FIRST.md](ARCHITECTURE_AVR_FIRST.md)
 > - Example sketches: [EXAMPLES.md](EXAMPLES.md)
+> - Release automation plan: [RELEASE_AUTOMATION_PLAN.md](RELEASE_AUTOMATION_PLAN.md)
 
 Basic PlatformIO project targeting the Arduino Uno (ATmega328P).
 
