@@ -75,6 +75,12 @@ void test_digiin_branches() {
   TEST_ASSERT_FALSE(digi.begin(pins, 1, 4, 0.0f, false));
   TEST_ASSERT_FALSE(digi.begin(badPins, 1, 4, 1000.0f, false));
   TEST_ASSERT_TRUE(digi.begin(pins, 1, 4, 1000.0f, false));
+  TEST_ASSERT_EQUAL_UINT8(1, digi.getPinCount());
+
+  // cover usePullup branch too
+  DigiIn digiPullup;
+  TEST_ASSERT_TRUE(digiPullup.begin(pins, 1, 4, 1000.0f, true));
+  TEST_ASSERT_EQUAL_UINT8(1, digiPullup.getPinCount());
 
   digi.updateIfReady();  // !_windowReady path
 
@@ -162,6 +168,9 @@ void test_cmdline_commands() {
   runCmd(cli, "pwm-freq 1000");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
 
+  runCmd(cli, "pwm-freq 1000000");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "unable to set frequency"));
+
   runCmd(cli, "pwm-duty");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "missing duty parameters"));
 
@@ -179,6 +188,16 @@ void test_cmdline_commands() {
 
   runCmd(cli, "unknown-cmd");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "unknown command"));
+
+  // cover idle-timeout dispatch path (no trailing newline)
+  Serial.clearOutput();
+  advanceMillis(1);
+  Serial.setInput("help");
+  cli.processSerial();
+  TEST_ASSERT_EQUAL_UINT32(0, static_cast<uint32_t>(strstr(Serial.getOutput().c_str(), "help") != nullptr));
+  advanceMillis(100);
+  cli.processSerial();
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "help"));
 }
 
 void test_timer_and_pwm_stubs() {
