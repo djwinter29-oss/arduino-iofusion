@@ -7,6 +7,7 @@
 > - AVR-first architecture plan: [docs/md/ARCHITECTURE_AVR_FIRST.md](docs/md/ARCHITECTURE_AVR_FIRST.md)
 > - Example sketches: [docs/md/EXAMPLES.md](docs/md/EXAMPLES.md)
 > - Release automation plan: [docs/md/RELEASE_AUTOMATION_PLAN.md](docs/md/RELEASE_AUTOMATION_PLAN.md)
+> - API reference: [docs/md/API_REFERENCE.md](docs/md/API_REFERENCE.md)
 
 ## Quick start (60 seconds)
 
