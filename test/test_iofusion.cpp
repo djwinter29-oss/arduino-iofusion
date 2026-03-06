@@ -194,7 +194,8 @@ void test_cmdline_commands() {
   advanceMillis(1);
   Serial.setInput("help");
   cli.processSerial();
-  TEST_ASSERT_EQUAL_UINT32(0, static_cast<uint32_t>(strstr(Serial.getOutput().c_str(), "help") != nullptr));
+  TEST_ASSERT_EQUAL_UINT32(
+      0, static_cast<uint32_t>(strstr(Serial.getOutput().c_str(), "help") != nullptr));
   advanceMillis(100);
   cli.processSerial();
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "help"));
