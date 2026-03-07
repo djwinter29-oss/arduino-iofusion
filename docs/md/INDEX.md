@@ -2,6 +2,10 @@
 
 Start here for project documentation.
 
+## Scope
+
+IOFusion is maintained as an **Arduino-focused library**. Current development priority is reliability, API clarity, and release quality on Arduino/AVR targets rather than multi-platform abstraction.
+
 ## Core docs
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — current module/runtime architecture.

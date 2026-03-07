@@ -1,5 +1,7 @@
 # PlatformIO Arduino Uno Project
 
+> **Project scope:** IOFusion is intentionally **Arduino-focused** (AVR/Uno-first). Cross-platform HAL expansion is out of scope for now.
+
 > Docs index: [docs/md/INDEX.md](docs/md/INDEX.md)
 > - Architecture: [docs/md/ARCHITECTURE.md](docs/md/ARCHITECTURE.md)
 > - PlatformIO library install/publish/use: [docs/md/PLATFORMIO_LIBRARY.md](docs/md/PLATFORMIO_LIBRARY.md)

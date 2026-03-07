@@ -5,7 +5,8 @@ This document defines a **low-risk roadmap**: keep AVR support stable now, prepa
 ## 1. Strategy
 
 - **Current product promise**: AVR/Arduino Uno quality and stability.
-- **Near-term architecture goal**: decouple hardware access from module logic.
+- **Current roadmap decision**: stay Arduino-focused; do not pursue cross-platform HAL expansion now.
+- **Near-term architecture goal**: improve API clarity, documentation, tests, and release quality.
 - **Risk rule**: no behavior-breaking refactor until tests and interfaces are in place.
 
 ## 2. Why AVR-First

@@ -4,6 +4,9 @@
 
 IOFusion is a small Arduino-focused component set for **deterministic timing**, with a clear split between:
 
+- **Scope policy:** Arduino/AVR-first only.
+- **Non-goal:** multi-platform HAL support in the current roadmap.
+
 - **ISR path**: minimal, fast operations only (flags/counters/state updates)
 - **Main loop path**: heavier work (ADC reads, window math, serial command processing)
 

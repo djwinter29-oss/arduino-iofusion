@@ -2,6 +2,12 @@
 
 This document is the practical API contract for IOFusion as an Arduino-focused library.
 
+## Scope statement
+
+- Target: Arduino ecosystem (AVR/Uno-first).
+- Current policy: keep API/implementation simple and stable for Arduino use cases.
+- Non-goal for now: generic cross-platform HAL abstraction.
+
 ## Design contract
 
 - **ISR-safe entry points**: `onTick()` style methods should stay minimal.

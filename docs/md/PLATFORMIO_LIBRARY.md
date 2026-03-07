@@ -17,7 +17,14 @@ Current manifest defines:
   - `lib/IOFusion/include`
   - `lib/IOFusion/src`
 
-## 2) Recommended Structure
+## 2) Scope and Compatibility
+
+This library is intentionally maintained for Arduino-centric usage.
+
+- Primary target: AVR / Arduino Uno-class boards.
+- Cross-platform support is not currently promised.
+
+## 3) Recommended Structure
 
 PlatformIO recommends `include/` + `src/` in the library package. In this mono-repo, equivalent folders are mapped through `library.json` build settings:
 
@@ -28,7 +35,7 @@ Examples are provided under:
 
 - `examples/basic_usage/basic_usage.ino`
 
-## 3) Installation
+## 4) Installation
 
 ### A. Install from Git URL (immediate use)
 
@@ -55,7 +62,7 @@ lib_deps =
   djwinter29-oss/IOFusion@^0.1.0
 ```
 
-## 4) Basic Usage
+## 5) Basic Usage
 
 ```cpp
 #include <Arduino.h>
@@ -96,7 +103,7 @@ void loop() {
 
 See full example: `examples/basic_usage/basic_usage.ino`
 
-## 5) Publish Process
+## 6) Publish Process
 
 1. Ensure `library.json` metadata is complete and correct.
 2. Update `version` for every release.
@@ -109,7 +116,7 @@ pio pkg publish --type library
 
 5. Verify page in PlatformIO Registry.
 
-## 6) New Release Checklist
+## 7) New Release Checklist
 
 - [ ] Code/tests/docs updated
 - [ ] CI green
@@ -117,7 +124,7 @@ pio pkg publish --type library
 - [ ] Tag/release note prepared (optional but recommended)
 - [ ] `pio pkg publish --type library` executed
 
-## 7) Unpublish (if a version is bad)
+## 8) Unpublish (if a version is bad)
 
 ```bash
 pio pkg unpublish --type library --owner djwinter29-oss --name IOFusion --version <x.y.z>
