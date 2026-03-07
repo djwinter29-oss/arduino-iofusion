@@ -1,10 +1,12 @@
 # PlatformIO Arduino Uno Project
 
+> **Project scope:** IOFusion is intentionally **Arduino-focused** (Uno-class targets). Cross-platform HAL expansion is out of scope for now.
+
 > Docs index: [docs/md/INDEX.md](docs/md/INDEX.md)
 > - Architecture: [docs/md/ARCHITECTURE.md](docs/md/ARCHITECTURE.md)
 > - PlatformIO library install/publish/use: [docs/md/PLATFORMIO_LIBRARY.md](docs/md/PLATFORMIO_LIBRARY.md)
 > - Coverage limitations: [docs/md/COVERAGE_LIMITATIONS.md](docs/md/COVERAGE_LIMITATIONS.md)
-> - AVR-first architecture plan: [docs/md/ARCHITECTURE_AVR_FIRST.md](docs/md/ARCHITECTURE_AVR_FIRST.md)
+> - Arduino scope & roadmap: [docs/md/ARCHITECTURE_ARDUINO_SCOPE.md](docs/md/ARCHITECTURE_ARDUINO_SCOPE.md)
 > - Example sketches: [docs/md/EXAMPLES.md](docs/md/EXAMPLES.md)
 > - Release automation plan: [docs/md/RELEASE_AUTOMATION_PLAN.md](docs/md/RELEASE_AUTOMATION_PLAN.md)
 > - API reference: [docs/md/API_REFERENCE.md](docs/md/API_REFERENCE.md)
