@@ -9,7 +9,7 @@ IOFusion is maintained as an **Arduino-focused library**. Current development pr
 ## Core docs
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — current module/runtime architecture.
-- [ARCHITECTURE_AVR_FIRST.md](ARCHITECTURE_AVR_FIRST.md) — low-risk AVR-first evolution strategy.
+- [ARCHITECTURE_ARDUINO_SCOPE.md](ARCHITECTURE_ARDUINO_SCOPE.md) — Arduino-only scope and near-term roadmap.
 - [PLATFORMIO_LIBRARY.md](PLATFORMIO_LIBRARY.md) — install, usage, and publish guide.
 - [EXAMPLES.md](EXAMPLES.md) — ready-to-run example sketches and pin notes.
 - [API_REFERENCE.md](API_REFERENCE.md) — practical API contract and method behavior.

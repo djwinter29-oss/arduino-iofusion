@@ -21,7 +21,7 @@ Current manifest defines:
 
 This library is intentionally maintained for Arduino-centric usage.
 
-- Primary target: AVR / Arduino Uno-class boards.
+- Primary target: Arduino Uno-class boards.
 - Cross-platform support is not currently promised.
 
 ## 3) Recommended Structure

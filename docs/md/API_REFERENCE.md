@@ -4,7 +4,7 @@ This document is the practical API contract for IOFusion as an Arduino-focused l
 
 ## Scope statement
 
-- Target: Arduino ecosystem (AVR/Uno-first).
+- Target: Arduino ecosystem (Uno-class targets).
 - Current policy: keep API/implementation simple and stable for Arduino use cases.
 - Non-goal for now: generic cross-platform HAL abstraction.
 
