@@ -4,6 +4,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+namespace {
+
+template <typename T>
+void printError(T message) {
+  Serial.print(F("{\"error\":\""));
+  Serial.print(message);
+  Serial.println(F("\"}"));
+}
+
+}  // namespace
+
 CmdLine::CmdLine(AnalogSampler& analog, DigiIn& digi, EncoderGenerator& encoder, Timer1PWM& pwm,
                  const uint8_t* analogPins, uint8_t analogCount, const uint8_t* digitalPins,
                  uint8_t digitalCount)
@@ -85,44 +96,44 @@ void CmdLine::handleCommand(char* cmd) {
 
   if (strcmp(tokens[0], "pwm-freq") == 0) {
     if (tokenCount < 2) {
-      Serial.println(F("{\"error\":\"missing frequency\"}"));
+      printError(F("missing frequency"));
       return;
     }
     char* endp = nullptr;
     double freqVal = strtod(tokens[1], &endp);
     if (endp == tokens[1] || *endp != '\0' || freqVal <= 0.0) {
-      Serial.println(F("{\"error\":\"invalid frequency\"}"));
+      printError(F("invalid frequency"));
       return;
     }
     float freq = static_cast<float>(freqVal);
     if (_pwm.begin(freq)) {
       Serial.println(F("{\"status\":\"ok\"}"));
     } else {
-      Serial.println(F("{\"error\":\"unable to set frequency\"}"));
+      printError(F("unable to set frequency"));
     }
     return;
   }
 
   if (strcmp(tokens[0], "pwm-duty") == 0) {
     if (tokenCount < 3) {
-      Serial.println(F("{\"error\":\"missing duty parameters\"}"));
+      printError(F("missing duty parameters"));
       return;
     }
     char* endp = nullptr;
     long channelVal = strtol(tokens[1], &endp, 10);
     if (endp == tokens[1] || *endp != '\0') {
-      Serial.println(F("{\"error\":\"invalid channel\"}"));
+      printError(F("invalid channel"));
       return;
     }
     int channel = static_cast<int>(channelVal);
     if (channel < 0 || channel > 1) {
-      Serial.println(F("{\"error\":\"invalid channel\"}"));
+      printError(F("invalid channel"));
       return;
     }
     endp = nullptr;
     double dutyVal = strtod(tokens[2], &endp);
     if (endp == tokens[2] || *endp != '\0') {
-      Serial.println(F("{\"error\":\"invalid duty\"}"));
+      printError(F("invalid duty"));
       return;
     }
     float duty = static_cast<float>(dutyVal);
@@ -136,7 +147,7 @@ void CmdLine::handleCommand(char* cmd) {
     return;
   }
 
-  Serial.println(F("{\"error\":\"unknown command\"}"));
+  printError(F("unknown command"));
 }
 
 void CmdLine::dispatchCommand() {
