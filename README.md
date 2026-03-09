@@ -10,6 +10,7 @@
 > - Example sketches: [docs/md/EXAMPLES.md](docs/md/EXAMPLES.md)
 > - Release automation plan: [docs/md/RELEASE_AUTOMATION_PLAN.md](docs/md/RELEASE_AUTOMATION_PLAN.md)
 > - API reference: [docs/md/API_REFERENCE.md](docs/md/API_REFERENCE.md)
+> - API stability policy: [docs/md/API_STABILITY.md](docs/md/API_STABILITY.md)
 
 ## Quick start (60 seconds)
 
