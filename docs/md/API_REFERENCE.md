@@ -1,17 +1,17 @@
-# API Reference (Arduino / AVR)
+# API Reference (Arduino)
 
-This document is the practical API contract for IOFusion as an Arduino-focused library.
+This document describes the current public API contract for IOFusion.
 
 ## Scope statement
 
 - Target: Arduino ecosystem (Uno-class targets).
-- Current policy: keep API/implementation simple and stable for Arduino use cases.
+- Policy: keep API/implementation simple and stable for Arduino use cases.
 - Non-goal for now: generic cross-platform HAL abstraction.
 
 ## Design contract
 
 - **ISR-safe entry points**: `onTick()` style methods should stay minimal.
-- **Loop-side processing**: heavier math and formatting runs in `loop()` methods.
+- **Loop-side processing**: heavier math/formatting runs in loop-side methods.
 - **Non-blocking expectation**: call update methods frequently from `loop()`.
 
 ---
@@ -76,11 +76,11 @@ Header: `lib/IOFusion/include/encoder.h`
   - Configures quadrature outputs (`pinA`, `pinB`) and direction inputs (`up`, `down`).
 
 - `void onTick()`
-  - ISR-side state advance based on direction levels.
+  - ISR-side state advance based on direction input levels.
 
-- `int32_t getPosition() const`
-- `bool getDirection() const`
-  - `true` => UP, `false` => DOWN.
+- `int32_t getPosition()`
+- `bool getDirection()`
+  - Direction semantics: `true` => UP, `false` => DOWN.
 
 - `void reset()`
   - Resets position/state and drives outputs low.
@@ -123,4 +123,4 @@ Header: `lib/IOFusion/include/timer.h`
 
 ## Compatibility scope
 
-IOFusion is intentionally **Arduino/AVR-first**. API and implementation choices prioritize deterministic behavior on this target family over cross-platform abstraction complexity.
+IOFusion is intentionally maintained for **Arduino-focused** usage. Compatibility commitments in this document are made within that scope.
