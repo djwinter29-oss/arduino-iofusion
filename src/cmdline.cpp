@@ -13,6 +13,39 @@ void printError(T message) {
   Serial.println(F("\"}"));
 }
 
+bool tryParsePositiveFloat(const char* token, float& out) {
+  char* endp = nullptr;
+  double value = strtod(token, &endp);
+  if (endp == token || *endp != '\0' || value <= 0.0) {
+    return false;
+  }
+  out = static_cast<float>(value);
+  return true;
+}
+
+bool tryParseIntInRange(const char* token, int minValue, int maxValue, int& out) {
+  char* endp = nullptr;
+  long value = strtol(token, &endp, 10);
+  if (endp == token || *endp != '\0') {
+    return false;
+  }
+  if (value < minValue || value > maxValue) {
+    return false;
+  }
+  out = static_cast<int>(value);
+  return true;
+}
+
+bool tryParseFloat(const char* token, float& out) {
+  char* endp = nullptr;
+  double value = strtod(token, &endp);
+  if (endp == token || *endp != '\0') {
+    return false;
+  }
+  out = static_cast<float>(value);
+  return true;
+}
+
 }  // namespace
 
 CmdLine::CmdLine(AnalogSampler& analog, DigiIn& digi, EncoderGenerator& encoder, Timer1PWM& pwm,
@@ -99,13 +132,11 @@ void CmdLine::handleCommand(char* cmd) {
       printError(F("missing frequency"));
       return;
     }
-    char* endp = nullptr;
-    double freqVal = strtod(tokens[1], &endp);
-    if (endp == tokens[1] || *endp != '\0' || freqVal <= 0.0) {
+    float freq = 0.0f;
+    if (!tryParsePositiveFloat(tokens[1], freq)) {
       printError(F("invalid frequency"));
       return;
     }
-    float freq = static_cast<float>(freqVal);
     if (_pwm.begin(freq)) {
       Serial.println(F("{\"status\":\"ok\"}"));
     } else {
@@ -119,24 +150,16 @@ void CmdLine::handleCommand(char* cmd) {
       printError(F("missing duty parameters"));
       return;
     }
-    char* endp = nullptr;
-    long channelVal = strtol(tokens[1], &endp, 10);
-    if (endp == tokens[1] || *endp != '\0') {
+    int channel = 0;
+    if (!tryParseIntInRange(tokens[1], 0, 1, channel)) {
       printError(F("invalid channel"));
       return;
     }
-    int channel = static_cast<int>(channelVal);
-    if (channel < 0 || channel > 1) {
-      printError(F("invalid channel"));
-      return;
-    }
-    endp = nullptr;
-    double dutyVal = strtod(tokens[2], &endp);
-    if (endp == tokens[2] || *endp != '\0') {
+    float duty = 0.0f;
+    if (!tryParseFloat(tokens[2], duty)) {
       printError(F("invalid duty"));
       return;
     }
-    float duty = static_cast<float>(dutyVal);
     _pwm.setDuty(static_cast<uint8_t>(channel), duty);
     Serial.println(F("{\"status\":\"ok\"}"));
     return;
