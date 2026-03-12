@@ -21,7 +21,7 @@ bool AnalogSampler::begin(const uint8_t* channels, uint8_t channelCount) {
 }
 
 void AnalogSampler::onTick() {
-  // called from ISR context — just set the request flag
+  // ISR-owned write: loop consumes/clears this flag in sampleIfDue()
   _sampleRequested = true;
 }
 

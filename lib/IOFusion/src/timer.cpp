@@ -119,7 +119,7 @@ void Timer2Driver::detachCallback(Timer2Callback cb) {
 
 // ISR for Timer2 Compare Match A
 ISR(TIMER2_COMPA_vect) {
-  // call callback if present
+  // ISR reads callback table; table writes are guarded in attach/detach
   Timer2Driver::handleInterrupt();
   // encoder tick should be attached via Timer2Driver::attachCallback()
 }

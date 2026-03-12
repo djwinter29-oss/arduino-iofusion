@@ -39,7 +39,7 @@ bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, flo
 }
 
 void DigiIn::onTick() {
-  // Short ISR-safe sampling
+  // ISR-owned counters/flags update (consumed in updateIfReady())
   if (_windowReady) return;
   for (uint8_t i = 0; i < _pinCount; ++i) {
     uint8_t s = readPinState(_pinPortIn[i], _pinMask[i]);
