@@ -43,7 +43,7 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
 }
 
 void EncoderGenerator::onTick() {
-  // Level-triggered sampling: if up is HIGH and down LOW -> step forward each tick
+  // ISR-owned position/state updates; getters read with interrupt guards
   bool upHigh = (_upPortIn && ((*_upPortIn & _upMask) != 0));
   bool downHigh = (_downPortIn && ((*_downPortIn & _downMask) != 0));
   bool stepped = false;
