@@ -1,5 +1,13 @@
 #include "digiin.h"
 
+namespace {
+
+inline uint8_t readPinState(volatile uint8_t* portIn, uint8_t mask) {
+  return (portIn && ((*portIn & mask) != 0)) ? 1 : 0;
+}
+
+}  // namespace
+
 DigiIn::DigiIn() {}
 
 bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, float tickHz,
@@ -21,7 +29,7 @@ bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, flo
     if (port == NOT_A_PIN || _pinPortIn[i] == nullptr || _pinMask[i] == 0) return false;
     _edgeCnt[i] = 0;
     _highCnt[i] = 0;
-    _lastState[i] = (_pinPortIn[i] && ((*_pinPortIn[i] & _pinMask[i]) != 0)) ? 1 : 0;
+    _lastState[i] = readPinState(_pinPortIn[i], _pinMask[i]);
     _freq[i] = 0.0f;
     _duty[i] = 0.0f;
   }
@@ -34,7 +42,7 @@ void DigiIn::onTick() {
   // Short ISR-safe sampling
   if (_windowReady) return;
   for (uint8_t i = 0; i < _pinCount; ++i) {
-    uint8_t s = (_pinPortIn[i] && ((*_pinPortIn[i] & _pinMask[i]) != 0)) ? 1 : 0;
+    uint8_t s = readPinState(_pinPortIn[i], _pinMask[i]);
     if (s) _highCnt[i]++;
     // detect rising edge
     if (s && !_lastState[i]) _edgeCnt[i]++;
