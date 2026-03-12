@@ -15,6 +15,7 @@ IOFusion is maintained as an **Arduino-focused library**. Current development pr
 - [API_REFERENCE.md](API_REFERENCE.md) — practical API contract and method behavior.
 - [API_STABILITY.md](API_STABILITY.md) — compatibility guarantees, SemVer, and deprecation policy.
 - [COVERAGE_LIMITATIONS.md](COVERAGE_LIMITATIONS.md) — what native tests can/cannot cover.
+- [CONCURRENCY_MODEL.md](CONCURRENCY_MODEL.md) — ISR/loop ownership and synchronization rules.
 - [RELEASE_AUTOMATION_PLAN.md](RELEASE_AUTOMATION_PLAN.md) — tag-driven GitHub Actions publish flow.
 
 ## Fast paths
