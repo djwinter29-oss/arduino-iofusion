@@ -165,6 +165,12 @@ void test_cmdline_commands() {
   runCmd(cli, "pwm-freq abc");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
 
+  runCmd(cli, "  PWM-FREQ   500   ");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
+
+  runCmd(cli, "pwm-freq 0");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+
   runCmd(cli, "pwm-freq 1000");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
 
@@ -182,6 +188,12 @@ void test_cmdline_commands() {
 
   runCmd(cli, "pwm-duty 1 abc");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid duty"));
+
+  runCmd(cli, "PWM-DUTY 0 50");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
+
+  runCmd(cli, "pwm-duty -1 10");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid channel"));
 
   runCmd(cli, "pwm-duty 1 12.5");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
