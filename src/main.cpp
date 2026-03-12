@@ -17,9 +17,9 @@ DigiIn digiIn;
 EncoderGenerator encoder;
 Timer1PWM pwm;
 
-bool analogOk = false;
-bool digiOk = false;
-bool encoderOk = false;
+volatile bool analogOk = false;
+volatile bool digiOk = false;
+volatile bool encoderOk = false;
 bool pwmOk = false;
 bool timerOk = false;
 
