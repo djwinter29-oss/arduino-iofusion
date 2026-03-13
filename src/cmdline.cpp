@@ -46,6 +46,52 @@ bool tryParseFloat(const char* token, float& out) {
   return true;
 }
 
+void printStatusOk() {
+  Serial.println(F("{\"status\":\"ok\"}"));
+}
+
+void printHelp() {
+  Serial.println(F("{\"help\":\"analog? digital? encoder? pwm-freq <hz> pwm-duty <ch> <pct>\"}"));
+}
+
+bool handlePwmFreq(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
+  if (tokenCount < 2) {
+    printError(F("missing frequency"));
+    return true;
+  }
+  float freq = 0.0f;
+  if (!tryParsePositiveFloat(tokens[1], freq)) {
+    printError(F("invalid frequency"));
+    return true;
+  }
+  if (pwm.begin(freq)) {
+    printStatusOk();
+  } else {
+    printError(F("unable to set frequency"));
+  }
+  return true;
+}
+
+bool handlePwmDuty(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
+  if (tokenCount < 3) {
+    printError(F("missing duty parameters"));
+    return true;
+  }
+  int channel = 0;
+  if (!tryParseIntInRange(tokens[1], 0, 1, channel)) {
+    printError(F("invalid channel"));
+    return true;
+  }
+  float duty = 0.0f;
+  if (!tryParseFloat(tokens[2], duty)) {
+    printError(F("invalid duty"));
+    return true;
+  }
+  pwm.setDuty(static_cast<uint8_t>(channel), duty);
+  printStatusOk();
+  return true;
+}
+
 }  // namespace
 
 CmdLine::CmdLine(AnalogSampler& analog, DigiIn& digi, EncoderGenerator& encoder, Timer1PWM& pwm,
