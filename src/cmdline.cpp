@@ -174,45 +174,17 @@ void CmdLine::handleCommand(char* cmd) {
   }
 
   if (strcmp(tokens[0], "pwm-freq") == 0) {
-    if (tokenCount < 2) {
-      printError(F("missing frequency"));
-      return;
-    }
-    float freq = 0.0f;
-    if (!tryParsePositiveFloat(tokens[1], freq)) {
-      printError(F("invalid frequency"));
-      return;
-    }
-    if (_pwm.begin(freq)) {
-      Serial.println(F("{\"status\":\"ok\"}"));
-    } else {
-      printError(F("unable to set frequency"));
-    }
+    (void)handlePwmFreq(_pwm, tokens, tokenCount);
     return;
   }
 
   if (strcmp(tokens[0], "pwm-duty") == 0) {
-    if (tokenCount < 3) {
-      printError(F("missing duty parameters"));
-      return;
-    }
-    int channel = 0;
-    if (!tryParseIntInRange(tokens[1], 0, 1, channel)) {
-      printError(F("invalid channel"));
-      return;
-    }
-    float duty = 0.0f;
-    if (!tryParseFloat(tokens[2], duty)) {
-      printError(F("invalid duty"));
-      return;
-    }
-    _pwm.setDuty(static_cast<uint8_t>(channel), duty);
-    Serial.println(F("{\"status\":\"ok\"}"));
+    (void)handlePwmDuty(_pwm, tokens, tokenCount);
     return;
   }
 
   if (strcmp(tokens[0], "help") == 0) {
-    Serial.println(F("{\"help\":\"analog? digital? encoder? pwm-freq <hz> pwm-duty <ch> <pct>\"}"));
+    printHelp();
     return;
   }
 
