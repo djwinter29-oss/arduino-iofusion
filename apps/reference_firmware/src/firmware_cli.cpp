@@ -120,7 +120,7 @@ void printCommaIfNeeded(bool& firstField) {
 }
 
 void printHelp() {
-  Serial.println(F("{\"help\":\"analog? digital? encoder? all? reset pwm-freq <hz> pwm-duty <ch> <pct>\"}"));
+  Serial.println(F("{\"help\":\"analog? digital? encoder? all? reset(immediate) pwm-freq <hz> pwm-duty <ch> <pct>\"}"));
 }
 
 bool handlePwmFreq(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {

@@ -10,7 +10,10 @@ import serial
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Poll the IOFusion reference firmware with all? once per interval."
+        description=(
+            "Poll the IOFusion reference firmware with all? once per interval. "
+            "Responses are convenience aggregate samples, not whole-system atomic snapshots."
+        )
     )
     parser.add_argument("port", help="Serial port, for example /dev/ttyACM0 or COM4")
     parser.add_argument(

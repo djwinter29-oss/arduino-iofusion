@@ -111,7 +111,11 @@ void setup() {
   if (!timerOk) {
     Serial.println(F("{\"error\":\"timer2 init failed\"}"));
   } else {
-    timer2.attachCallback(timerTickHandler);
+    timerOk = timer2.attachCallback(timerTickHandler);
+    if (!timerOk) {
+      timer2.stop();
+      Serial.println(F("{\"error\":\"timer2 callback attach failed\"}"));
+    }
   }
 }
 

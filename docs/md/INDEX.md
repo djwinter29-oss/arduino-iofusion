@@ -24,3 +24,13 @@ The docs folder is intentionally small:
 - architecture and concurrency live together because they describe the same runtime model,
 - API behavior and stability policy live together because both define the public contract,
 - release automation and manual fallback live together because they are part of one release process.
+
+## Doxygen
+
+Generate the API site locally with:
+
+```bash
+doxygen Doxyfile
+```
+
+Generated output is written to `docs/doxygen/html/index.html`. The Doxygen site uses `README.md` as the landing page and includes the Markdown documents under `docs/md/` alongside the header/source API pages.

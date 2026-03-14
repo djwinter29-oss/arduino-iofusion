@@ -174,15 +174,15 @@ Preferred setup:
 - `void onTick()`
   - ISR-side state advance based on direction input levels.
 
-  - `int32_t getPosition()`
-    - Returns the absolute generated position count relative to startup or the most recent `reset()`.
-    - The count saturates at the `int32_t` limits instead of wrapping.
+- `int32_t getPosition()`
+  - Returns the absolute generated position count relative to startup or the most recent `reset()`.
+  - The count saturates at the `int32_t` limits instead of wrapping.
 - `bool getDirection()`
   - Direction semantics: `true` => UP, `false` => DOWN.
 
 - `void reset()`
-    - Resets position/state and drives outputs low.
-    - Establishes a new zero origin for subsequent absolute position reads.
+  - Resets position/state and drives outputs low.
+  - Establishes a new zero origin for subsequent absolute position reads.
 
 ---
 
@@ -270,11 +270,20 @@ Response contract:
 
 - Success: `{"status":"ok"}` for mutating PWM commands.
 - `reset` returns `{"status":"resetting"}` immediately before the reference firmware requests a board reset.
+- `reset` is intentionally immediate and unconfirmed in the reference firmware; it is defined as a host-issued systemwide reset request rather than a guarded maintenance-only verb.
 - Errors (stable keys): `{"error":"..."}`.
 - Unknown command: `{"error":"unknown command"}`.
 - `digital?` responses include `overrunTicks` so stale sampling windows are detectable from the reference firmware.
 - `digital?` responses also include `frameSeq` and `stale` so freshness is attached to the reported measurement frame itself.
 - `all?` returns one combined JSON object containing analog fields, the coherent digital frame fields, and the encoder object.
+- `all?` is a convenience aggregate for human diagnostics and low-rate host polling, not a whole-system atomic snapshot.
+- Within `all?`, the digital fields come from one coherent published digital frame, while analog fields and encoder state are read live during response formatting and may represent slightly different instants.
+
+Implication for host software:
+
+- `all?` is appropriate for dashboards, periodic supervisory polling, and manual inspection.
+- If a host requires one strictly simultaneous observation across analog, digital, and encoder subsystems, that must be implemented as an explicit staged snapshot contract in firmware rather than assumed from `all?`.
+- `reset` should be treated as a deliberate supervisory control action. The reference firmware does not add an extra confirmation token or role boundary around it.
 
 Parser behavior notes:
 
