@@ -1,8 +1,16 @@
 #include "encoder.h"
 
-// Clean, instance-based implementation of EncoderGenerator.
+namespace {
 
-bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down) {
+bool readControlState(volatile uint8_t* portIn, uint8_t mask, bool activeHigh) {
+  bool levelHigh = (portIn && ((*portIn & mask) != 0));
+  return activeHigh ? levelHigh : !levelHigh;
+}
+
+}  // namespace
+
+bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down,
+                             bool usePullup, bool activeHigh) {
   if (pinA == pinB) return false;
   _pinA = pinA;
   _pinB = pinB;
@@ -23,8 +31,13 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
 
   _pinUp = up;
   _pinDown = down;
-  pinMode(_pinUp, INPUT_PULLUP);
-  pinMode(_pinDown, INPUT_PULLUP);
+  if (usePullup) {
+    pinMode(_pinUp, INPUT_PULLUP);
+    pinMode(_pinDown, INPUT_PULLUP);
+  } else {
+    pinMode(_pinUp, INPUT);
+    pinMode(_pinDown, INPUT);
+  }
   uint8_t portUp = digitalPinToPort(_pinUp);
   uint8_t portDown = digitalPinToPort(_pinDown);
   _upPortIn = portInputRegister(portUp);
@@ -34,6 +47,7 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
   if (portUp == NOT_A_PIN || portDown == NOT_A_PIN || _upPortIn == nullptr ||
       _downPortIn == nullptr || _upMask == 0 || _downMask == 0)
     return false;
+  _activeHigh = activeHigh;
   noInterrupts();
   _position = 0;
   _directionUp = true;
@@ -44,8 +58,8 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
 
 void EncoderGenerator::onTick() {
   // ISR-owned position/state updates; getters read with interrupt guards
-  bool upHigh = (_upPortIn && ((*_upPortIn & _upMask) != 0));
-  bool downHigh = (_downPortIn && ((*_downPortIn & _downMask) != 0));
+  bool upHigh = readControlState(_upPortIn, _upMask, _activeHigh);
+  bool downHigh = readControlState(_downPortIn, _downMask, _activeHigh);
   bool stepped = false;
   if (upHigh && !downHigh) {
     _directionUp = true;

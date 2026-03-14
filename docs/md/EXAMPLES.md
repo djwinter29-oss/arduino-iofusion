@@ -11,6 +11,7 @@ This file lists quick-start examples included in this repository.
 - `examples/frequency_monitor/frequency_monitor.ino`
   - Measures digital frequency/duty using `DigiIn` + `Timer2Driver` ISR tick.
   - Expected serial: JSON lines like `{\"d2\":{\"freq\":... ,\"duty\":...},\"d3\":...}`.
+  - Measurement model: sampled estimator, best suited to signals well below the sampling Nyquist limit.
 
 - `examples/pwm_dual_channel/pwm_dual_channel.ino`
   - Drives Timer1 PWM on Uno pins 9/10 and sweeps dual-channel duty cycles.
@@ -39,6 +40,7 @@ pio device monitor -b 115200
 
 - `frequency_monitor`
   - Measured inputs: D2, D3 (configured as `INPUT_PULLUP`)
+  - Review the configured `tickHz` and `windowTicks` before using it as a frequency reference; it is not a hardware capture example.
 
 - `pwm_dual_channel`
   - PWM outputs: CH0=D9 (OC1A), CH1=D10 (OC1B)
@@ -51,6 +53,7 @@ pio device monitor -b 115200
 
 - `frequency_monitor` and `encoder_signal_generator` use input pins configured as `INPUT_PULLUP`.
 - For deterministic results, avoid heavy blocking work in `loop()`.
+- For high-frequency or narrow-pulse measurements, prefer hardware capture or dedicated edge interrupts over `DigiIn`.
 
 ## Troubleshooting (quick)
 

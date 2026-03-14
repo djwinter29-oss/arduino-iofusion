@@ -84,7 +84,7 @@ void setup() {
   analogSampler.setVref(5.0f);
 
   digiIn.begin(digitalPins, 2, 500, 1000.0f, true);
-  encoder.begin(8, 11, 12, 13);
+  encoder.begin(8, 11, 12, 13, true, false);
 
   pwm.begin(1000.0f);
   pwm.setDuty(0, 25.0f);

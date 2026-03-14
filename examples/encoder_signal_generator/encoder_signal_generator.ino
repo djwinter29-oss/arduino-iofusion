@@ -20,7 +20,7 @@ void setup() {
   Serial.begin(115200);
   delay(100);
 
-  if (!encoder.begin(8, 11, 12, 13)) {
+  if (!encoder.begin(8, 11, 12, 13, true, false)) {
     Serial.println(F("{\"error\":\"encoder init failed\"}"));
     return;
   }

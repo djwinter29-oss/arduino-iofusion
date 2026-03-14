@@ -52,6 +52,10 @@ Header: `lib/IOFusion/include/digiin.h`
 - `bool begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks=1000, float tickHz=1000.0f, bool usePullup=false)`
   - Initializes digital monitoring.
   - Returns `false` on invalid arguments or pin mapping failure.
+  - `DigiIn` is a sampled estimator: pulses shorter than one tick may be missed, and input frequencies above $\frac{\text{tickHz}}{2}$ alias.
+  - Frequency resolution is $\frac{\text{tickHz}}{\text{windowTicks}}$ Hz.
+  - Duty resolution is approximately $\frac{100}{\text{windowTicks}}\%$.
+  - For robust frequency and duty measurements, keep the input comfortably below Nyquist; a practical target is $f_{in} \le \frac{\text{tickHz}}{4}$.
 
 - `void onTick()`
   - ISR-side sampling and counter accumulation.
@@ -72,8 +76,10 @@ Header: `lib/IOFusion/include/encoder.h`
 
 ### Methods
 
-- `bool begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down)`
+- `bool begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down, bool usePullup=false, bool activeHigh=true)`
   - Configures quadrature outputs (`pinA`, `pinB`) and direction inputs (`up`, `down`).
+  - Default control semantics are logic-driven, active-HIGH inputs.
+  - For direct switch-to-ground wiring, use `usePullup=true` and `activeHigh=false`.
 
 - `void onTick()`
   - ISR-side state advance based on direction input levels.
@@ -98,6 +104,8 @@ Header: `lib/IOFusion/include/pwm.h`
 
 - `void setDuty(uint8_t channel, float percent)`
   - Channel `0`/`1`, duty in `0..100` (input is clamped).
+  - `0%` drives a steady LOW output level.
+  - `100%` drives a steady HIGH output level.
 
 - `void stop()`
   - Disables PWM outputs and clears setup state.
@@ -112,11 +120,14 @@ Header: `lib/IOFusion/include/timer.h`
 
 - `uint16_t beginHz(float freqHz)`
   - Starts Timer2 near requested frequency.
-  - Returns OCR value used (or `0` in test stubs).
+  - Returns the OCR value used on AVR, or `0` on invalid input / when Timer2 is already owned by another `Timer2Driver` instance.
+  - Clears any previously registered callbacks for that driver instance.
 
 - `void stop()`
-- `void attachCallback(Timer2Callback cb)`
-- `void detachCallback(Timer2Callback cb)`
+- `bool attachCallback(Timer2Callback cb)`
+  - Returns `false` for null callbacks, duplicates, callback-table overflow, or inactive drivers.
+- `bool detachCallback(Timer2Callback cb)`
+  - Returns `false` when the callback is not registered on the active driver.
 - `static void handleInterrupt()`
 
 ---

@@ -26,8 +26,8 @@ void setup() {
                1000.0f,
                true);
 
-  // pinA=8, pinB=11, up=12, down=13
-  encoder.begin(8, 11, 12, 13);
+  // pinA=8, pinB=11, up=12, down=13 using pull-up inputs with active-LOW controls
+  encoder.begin(8, 11, 12, 13, true, false);
 
   // Timer1 PWM on Uno pins 9/10
   pwm.begin(1000.0f);

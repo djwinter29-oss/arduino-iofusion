@@ -6,8 +6,10 @@
 
 class EncoderGenerator {
  public:
-  // Initialize generator pins and frequency. Returns true on success.
-  bool begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down);
+  // Initialize generator pins and control inputs. Returns true on success.
+  // By default the control inputs are logic-driven, active-HIGH inputs.
+  bool begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down, bool usePullup = false,
+             bool activeHigh = true);
   // Called from ISR to advance the quadrature state and write outputs.
   void onTick();
 
@@ -31,6 +33,7 @@ class EncoderGenerator {
   volatile uint8_t* _downPortIn = nullptr;
   uint8_t _upMask = 0;
   uint8_t _downMask = 0;
+  bool _activeHigh = true;
   volatile int32_t _position = 0;
   volatile bool _directionUp = true;
 };

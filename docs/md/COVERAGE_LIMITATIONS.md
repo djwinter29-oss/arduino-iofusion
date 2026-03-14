@@ -18,13 +18,24 @@ This project uses a `native` test environment with Arduino mocks to maximize fas
 
 ## Why this is acceptable
 
-- Native tests cover most business logic and error-handling branches.
-- Hardware-coupled code is isolated and exercised through API-level contract tests in `UNIT_TEST` mode.
-- CI remains fast and deterministic, while hardware verification can be added as a separate pipeline/job.
+- Native tests cover most loop-side business logic and error-handling branches, including:
+   - `CmdLine` parser behavior and timeout-based framing,
+   - `Timer2Driver` ownership / callback lifecycle behavior in `UNIT_TEST` mode,
+   - `DigiIn`, `AnalogSampler`, and `EncoderGenerator` logic contracts.
+- Hardware-coupled code is only partially exercised through API-level contract tests in `UNIT_TEST` mode.
+   - The native PWM path validates CLI/API flows, input validation, and retune command handling through stubs.
+   - It does **not** validate AVR register-level Timer1 behavior, waveform quality, or retune edge cases on real hardware.
+- CI remains fast and deterministic, while hardware verification should cover the remaining MCU-specific risk.
+
+## What the native suite does not prove
+
+- `CmdLine` is covered for parsing and framing, but not for real serial timing or host/device transport behavior.
+- `Timer2Driver` lifecycle is covered in the unit-test stub and at the API contract level, but not for true AVR interrupt timing.
+- `Timer1PWM` command paths are covered, but frequency retuning and saturation behavior still require AVR or hardware-in-the-loop validation because the native build uses stubs for the register path.
 
 ## Suggested future improvement
 
 - Add optional hardware smoke tests on a real Uno runner (or lab rig), focusing on:
   - Timer2 tick frequency sanity
-  - PWM frequency/duty output validation
-  - End-to-end CLI behavior on serial device
+   - PWM frequency retuning, duty saturation, and output validation on D9/D10
+   - End-to-end CLI behavior on a real serial device

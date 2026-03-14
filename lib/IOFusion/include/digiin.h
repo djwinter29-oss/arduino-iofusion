@@ -10,6 +10,8 @@ class DigiIn {
   // Begin monitoring pins: `pins` array of `count` pin numbers (max 8).
   // `windowTicks` is the number of onTick() samples per measurement window.
   // `tickHz` is the frequency (Hz) at which onTick() will be called.
+  // This is a sampled estimator, not a hardware capture block: pulses shorter
+  // than one tick may be missed, and transitions above Nyquist will alias.
   bool begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks = 1000,
              float tickHz = 1000.0f, bool usePullup = false);
 

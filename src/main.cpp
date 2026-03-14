@@ -60,7 +60,7 @@ void setup() {
                         kTimerTickHz, true);
   if (!digiOk) Serial.println(F("{\"error\":\"digital init failed\"}"));
 
-  encoderOk = encoder.begin(4, 5, 6, 7);
+  encoderOk = encoder.begin(4, 5, 6, 7, true, false);
   if (!encoderOk) Serial.println(F("{\"error\":\"encoder init failed\"}"));
 
   pwmOk = pwm.begin(100.0f);

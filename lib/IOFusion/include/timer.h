@@ -17,17 +17,21 @@ class Timer2Driver {
 
   // Attach a callback that will be called from the ISR context.
   // Keep the callback short; heavy work should be deferred to loop().
-  void attachCallback(Timer2Callback cb);
+  // Returns false for null callbacks, duplicates, overflow, or inactive drivers.
+  bool attachCallback(Timer2Callback cb);
   // Detach a specific callback previously attached. Pass the same function pointer.
-  void detachCallback(Timer2Callback cb);
+  // Returns false if the callback is not currently registered.
+  bool detachCallback(Timer2Callback cb);
   // ISR entry point
   static void handleInterrupt();
 
  private:
-  // internal state accessed from ISR
   static const uint8_t MAX_CALLBACKS = 4;
-  static volatile Timer2Callback _cbs[MAX_CALLBACKS];
-  // helper functions removed; implementation chooses prescaler directly
+  volatile Timer2Callback _cbs[MAX_CALLBACKS];
+  static Timer2Driver* volatile _activeDriver;
+
+  void resetCallbacks();
+  void dispatchCallbacks();
 };
 
 #endif  // IOFUSION_TIMER_H

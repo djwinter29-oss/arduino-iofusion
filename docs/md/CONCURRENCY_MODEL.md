@@ -55,10 +55,10 @@ This document defines ownership and synchronization rules for shared state.
 
 ### `Timer2Driver`
 
-- **ISR-owned reads/calls**: callback slots `_cbs[]` via `handleInterrupt()`.
-- **loop-owned writes**: `_cbs[]` via `attachCallback()/detachCallback()`.
+- **ISR-owned reads/calls**: active driver pointer and that instance's callback slots via `handleInterrupt()`.
+- **loop-owned writes**: active driver pointer via `beginHz()/stop()`, callback slots via `attachCallback()/detachCallback()`.
 - **protection**:
-  - callback table updates are guarded by `noInterrupts()/interrupts()`.
+  - active-driver handoff and callback table updates are guarded by `noInterrupts()/interrupts()`.
 
 ### `main.cpp` runtime flags
 

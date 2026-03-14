@@ -35,6 +35,7 @@ This design helps keep interrupt latency low and behavior predictable.
 - Samples digital pin states each tick.
 - Accumulates edge/high counts over a time window.
 - `updateIfReady()` computes frequency and duty cycle in main context.
+- This is a sampled estimator, not a hardware input-capture block.
 
 ### EncoderGenerator (`lib/IOFusion/include/encoder.h`, `lib/IOFusion/src/encoder.cpp`)
 
@@ -75,6 +76,19 @@ This flow preserves deterministic sampling while avoiding expensive ISR operatio
 - Keep ISR callbacks short and non-blocking.
 - Keep `loop()` responsive; long blocking code will delay deferred calculations.
 - Choose digital measurement windows (`windowTicks`) based on required response speed vs. stability.
+
+### DigiIn envelope and aliasing limits
+
+`DigiIn` measures digital signals by sampling them once per timer tick. It does not timestamp edges in hardware. That means:
+
+- transitions faster than $\frac{\text{tickHz}}{2}$ alias,
+- narrow pulses shorter than one tick may be missed,
+- frequency resolution is $\frac{\text{tickHz}}{\text{windowTicks}}$ Hz,
+- duty resolution is approximately $\frac{100}{\text{windowTicks}}\%$.
+
+For practical use, keep target input frequencies comfortably below Nyquist. A conservative guidance point is $f_{in} \le \frac{\text{tickHz}}{4}$ when you care about both frequency and duty-cycle fidelity.
+
+The default firmware wiring in [src/main.cpp](src/main.cpp) uses `tickHz = 10000` and `windowTicks = 500`, so the measurement window is 50 ms, frequency resolution is about 20 Hz, and duty resolution is about 0.2%. Higher-frequency or narrow-pulse measurements should move to hardware capture or dedicated edge interrupts.
 
 ---
 

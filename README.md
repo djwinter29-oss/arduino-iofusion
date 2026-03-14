@@ -45,9 +45,22 @@ IOFusion is a small set of hardware helpers focused on deterministic, timer-driv
 - `EncoderGenerator` produces a quadrature output and tracks position/direction.
 - `Timer1PWM` configures Timer1 PWM on OC1A/OC1B (pins 9/10).
 
+#### DigiIn measurement limits
+
+`DigiIn` is a sampled digital estimator, not a hardware input-capture peripheral. It observes each pin once per timer tick, counts sampled HIGH time, and counts sampled rising edges over a fixed window. That has a few direct consequences:
+
+- Pulses narrower than one tick can be missed entirely.
+- If the signal toggles faster than half the tick rate, aliasing is unavoidable.
+- Frequency resolution is one counted edge per window: $\Delta f = \frac{\text{tickHz}}{\text{windowTicks}}$.
+- Duty-cycle resolution is one sample per window: $\Delta duty \approx \frac{100}{\text{windowTicks}}\%$.
+
+For reliable square-wave style measurements, keep the input frequency comfortably below Nyquist; as a practical rule, target $f_{in} \le \frac{\text{tickHz}}{4}$ if both duty and edge count matter. For higher-frequency or narrow-pulse measurements, use hardware capture or edge interrupts instead of `DigiIn`.
+
+In the default firmware configuration, `DigiIn` runs at 10 kHz with a 500-tick window ([src/main.cpp](src/main.cpp)). That yields a 50 ms measurement window, about 20 Hz frequency resolution, and about 0.2% duty resolution, with best results on signals well below 2.5 kHz.
+
 ### Encoder generator semantics
 
-`EncoderGenerator` is a **signal generator** driven by two level inputs (`up`, `down`). It advances one quadrature step per tick when `up` is HIGH and `down` is LOW, and steps backward when `down` is HIGH and `up` is LOW. It does **not** decode a physical quadrature encoder.
+`EncoderGenerator` is a **signal generator** driven by two level inputs (`up`, `down`). By default it treats those controls as logic-driven, active-HIGH inputs: it advances one quadrature step per tick when `up` is asserted and `down` is not, and steps backward when `down` is asserted and `up` is not. For direct switch wiring to ground, initialize it with `usePullup=true` and `activeHigh=false`. It does **not** decode a physical quadrature encoder.
 
 ### Data flow
 
@@ -79,6 +92,8 @@ flowchart TD
 #### Timing contract (important)
 
 To keep measurements accurate, `loop()` should run frequently. If the loop stalls for long periods, analog sampling and digital window updates will lag. As a rule of thumb, keep worst-case loop latency well below the digital measurement window duration.
+
+For `DigiIn`, also size `tickHz` and `windowTicks` around the actual signal envelope you need to observe. A larger window improves stability and resolution but increases latency; a faster tick improves observability but increases ISR load.
 
 #### Analog reference voltage
 

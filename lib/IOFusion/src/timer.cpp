@@ -4,26 +4,123 @@
 #include "timer.h"
 #include <stdint.h>
 
-Timer2Driver::Timer2Driver() {}
+Timer2Driver* volatile Timer2Driver::_activeDriver = nullptr;
 
-uint16_t Timer2Driver::beginHz(float) {
-  return 0;
+Timer2Driver::Timer2Driver() {
+  resetCallbacks();
 }
-void Timer2Driver::stop() {}
+
+uint16_t Timer2Driver::beginHz(float freqHz) {
+  if (freqHz <= 0.0f) return 0;
+  noInterrupts();
+  if (_activeDriver != nullptr && _activeDriver != this) {
+    interrupts();
+    return 0;
+  }
+  resetCallbacks();
+  _activeDriver = this;
+  interrupts();
+  return 1;
+}
+
+void Timer2Driver::stop() {
+  noInterrupts();
+  if (_activeDriver == this) {
+    _activeDriver = nullptr;
+  }
+  resetCallbacks();
+  interrupts();
+}
+
+bool Timer2Driver::attachCallback(Timer2Callback cb) {
+  if (cb == nullptr) return false;
+
+  noInterrupts();
+  if (_activeDriver != this) {
+    interrupts();
+    return false;
+  }
+
+  for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
+    if (_cbs[i] == cb) {
+      interrupts();
+      return false;
+    }
+  }
+
+  for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
+    if (_cbs[i] == nullptr) {
+      _cbs[i] = cb;
+      interrupts();
+      return true;
+    }
+  }
+
+  interrupts();
+  return false;
+}
+
+bool Timer2Driver::detachCallback(Timer2Callback cb) {
+  if (cb == nullptr) return false;
+
+  noInterrupts();
+  if (_activeDriver != this) {
+    interrupts();
+    return false;
+  }
+
+  for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
+    if (_cbs[i] == cb) {
+      _cbs[i] = nullptr;
+      interrupts();
+      return true;
+    }
+  }
+
+  interrupts();
+  return false;
+}
+
+void Timer2Driver::handleInterrupt() {
+  Timer2Driver* driver = _activeDriver;
+  if (driver != nullptr) driver->dispatchCallbacks();
+}
+
+void Timer2Driver::resetCallbacks() {
+  for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
+    _cbs[i] = nullptr;
+  }
+}
+
+void Timer2Driver::dispatchCallbacks() {
+  for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
+    Timer2Callback cb = _cbs[i];
+    if (cb) cb();
+  }
+}
 
 #endif
 
 #if !defined(UNIT_TEST)
 #include "timer.h"
 
-// Static member definitions
-volatile Timer2Callback Timer2Driver::_cbs[Timer2Driver::MAX_CALLBACKS] = {nullptr, nullptr,
-                                                                           nullptr, nullptr};
+Timer2Driver* volatile Timer2Driver::_activeDriver = nullptr;
 
-Timer2Driver::Timer2Driver() {}
+Timer2Driver::Timer2Driver() {
+  resetCallbacks();
+}
 
 uint16_t Timer2Driver::beginHz(float freqHz) {
   if (freqHz <= 0) return 0;
+  noInterrupts();
+  if (_activeDriver != nullptr && _activeDriver != this) {
+    interrupts();
+    return 0;
+  }
+  _activeDriver = this;
+  resetCallbacks();
+  interrupts();
+
   // Stop timer2
   TCCR2A = 0;
   TCCR2B = 0;
@@ -88,43 +185,84 @@ uint16_t Timer2Driver::beginHz(float freqHz) {
 }
 
 void Timer2Driver::stop() {
+  noInterrupts();
   TIMSK2 &= ~_BV(OCIE2A);
   TCCR2A = 0;
   TCCR2B = 0;
+  if (_activeDriver == this) {
+    _activeDriver = nullptr;
+  }
+  resetCallbacks();
+  interrupts();
 }
 
-void Timer2Driver::attachCallback(Timer2Callback cb) {
+bool Timer2Driver::attachCallback(Timer2Callback cb) {
+  if (cb == nullptr) return false;
+
   noInterrupts();
+  if (_activeDriver != this) {
+    interrupts();
+    return false;
+  }
+
+  for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
+    if (_cbs[i] == cb) {
+      interrupts();
+      return false;
+    }
+  }
+
   for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
     if (_cbs[i] == nullptr) {
       _cbs[i] = cb;
-      break;
+      interrupts();
+      return true;
     }
   }
   interrupts();
+  return false;
 }
 
-void Timer2Driver::detachCallback(Timer2Callback cb) {
+bool Timer2Driver::detachCallback(Timer2Callback cb) {
+  if (cb == nullptr) return false;
+
   noInterrupts();
+  if (_activeDriver != this) {
+    interrupts();
+    return false;
+  }
+
   for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
     if (_cbs[i] == cb) {
       _cbs[i] = nullptr;
-      break;
+      interrupts();
+      return true;
     }
   }
   interrupts();
+  return false;
 }
 
 // No isSampleDue() flag — use attachCallback() for ISR work.
 
 // ISR for Timer2 Compare Match A
 ISR(TIMER2_COMPA_vect) {
-  // ISR reads callback table; table writes are guarded in attach/detach
+  // ISR dispatches callbacks for the active Timer2 owner instance.
   Timer2Driver::handleInterrupt();
-  // encoder tick should be attached via Timer2Driver::attachCallback()
 }
 
 void Timer2Driver::handleInterrupt() {
+  Timer2Driver* driver = _activeDriver;
+  if (driver != nullptr) driver->dispatchCallbacks();
+}
+
+void Timer2Driver::resetCallbacks() {
+  for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
+    _cbs[i] = nullptr;
+  }
+}
+
+void Timer2Driver::dispatchCallbacks() {
   for (uint8_t i = 0; i < MAX_CALLBACKS; ++i) {
     Timer2Callback cb = _cbs[i];
     if (cb) cb();
