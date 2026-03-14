@@ -62,11 +62,14 @@ bool DigitalInputMonitor::begin(const uint8_t* pins, uint8_t count, uint16_t win
   _samplesInWindow = 0;
   _windowReady = false;
   _overrunCount = 0;
+  _frameStale = false;
+  _frameSequence = 0;
   return true;
 }
 
 void DigitalInputMonitor::onTick() {
   if (_windowReady) {
+    _frameStale = true;
     if (_overrunCount != 0xFFFFFFFFUL) {
       ++_overrunCount;
     }
@@ -110,6 +113,10 @@ void DigitalInputMonitor::updateIfReady() {
       _freqMilliHz[i] = 0;
       _dutyPermille[i] = 0;
     }
+    _frameStale = false;
+    if (_frameSequence != 0xFFFFFFFFUL) {
+      ++_frameSequence;
+    }
     return;
   }
 
@@ -118,6 +125,10 @@ void DigitalInputMonitor::updateIfReady() {
     _freqMilliHz[i] = static_cast<uint32_t>((freqMilliHz + (samples / 2U)) / samples);
     uint32_t dutyPermille = (static_cast<uint32_t>(highCnt[i]) * 1000U) + (samples / 2U);
     _dutyPermille[i] = static_cast<uint16_t>(dutyPermille / samples);
+  }
+  _frameStale = false;
+  if (_frameSequence != 0xFFFFFFFFUL) {
+    ++_frameSequence;
   }
 }
 
@@ -145,6 +156,20 @@ uint16_t DigitalInputMonitor::getDutyPermille(uint8_t idx) const {
   if (idx >= _pinCount) return 0;
   noInterrupts();
   uint16_t v = _dutyPermille[idx];
+  interrupts();
+  return v;
+}
+
+bool DigitalInputMonitor::isFrameStale() const {
+  noInterrupts();
+  bool v = _frameStale;
+  interrupts();
+  return v;
+}
+
+uint32_t DigitalInputMonitor::getFrameSequence() const {
+  noInterrupts();
+  uint32_t v = _frameSequence;
   interrupts();
   return v;
 }

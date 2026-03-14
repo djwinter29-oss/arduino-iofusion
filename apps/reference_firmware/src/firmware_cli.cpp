@@ -187,7 +187,11 @@ void FirmwareCli::respondAnalog() {
 }
 
 void FirmwareCli::respondDigital() {
-  Serial.print(F("{\"overrunTicks\":"));
+  Serial.print(F("{\"frameSeq\":"));
+  Serial.print(_digitalMonitor.getFrameSequence());
+  Serial.print(F(",\"stale\":"));
+  Serial.print(_digitalMonitor.isFrameStale() ? F("true") : F("false"));
+  Serial.print(F(",\"overrunTicks\":"));
   Serial.print(_digitalMonitor.getOverrunCount());
   for (uint8_t i = 0; i < _digitalCount; ++i) {
     Serial.print(F(",\"d"));

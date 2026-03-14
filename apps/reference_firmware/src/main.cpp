@@ -9,13 +9,18 @@
 #include "version_info.h"
 
 namespace {
-constexpr float kTimerTickHz = 10000.0f;
+constexpr uint16_t kTimerTickHz = 10000;
+constexpr uint16_t kAnalogRequestHz = 500;
+static_assert(kTimerTickHz % kAnalogRequestHz == 0,
+              "Analog request rate must divide the scheduler tick rate.");
+constexpr uint8_t kAnalogTickDivider = kTimerTickHz / kAnalogRequestHz;
 
 Timer2Driver timer2;
 AnalogSampler analogSampler;
 DigitalInputMonitor digitalInputMonitor;
 EncoderGenerator encoder;
 Timer1PWM pwm;
+uint8_t analogTickDivider = 0;
 
 volatile bool analogOk = false;
 volatile bool digitalMonitorOk = false;
@@ -36,7 +41,7 @@ const DigitalInputMonitor::Config kDigitalMonitorConfig = {
     kDigitalPins,
     static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])),
     500,
-    kTimerTickHz,
+  static_cast<float>(kTimerTickHz),
     true,
 };
 
@@ -50,7 +55,7 @@ const EncoderGenerator::Config kEncoderConfig = {
 };
 
 const Timer1PWM::Config kPwmConfig(100.0f);
-const Timer2Driver::Config kTimerConfig(kTimerTickHz);
+const Timer2Driver::Config kTimerConfig(static_cast<float>(kTimerTickHz));
 const FirmwareCli::Config kCliConfig = {
     kAnalogPins,
     static_cast<uint8_t>(sizeof(kAnalogPins) / sizeof(kAnalogPins[0])),
@@ -61,7 +66,12 @@ const FirmwareCli::Config kCliConfig = {
 FirmwareCli firmwareCli(analogSampler, digitalInputMonitor, encoder, pwm, kCliConfig);
 
 void timerTickHandler() {
-  if (analogOk) analogSampler.onTick();
+  if (analogOk) {
+    if (++analogTickDivider >= kAnalogTickDivider) {
+      analogTickDivider = 0;
+      analogSampler.onTick();
+    }
+  }
   if (digitalMonitorOk) digitalInputMonitor.onTick();
   if (encoderOk) encoder.onTick();
 }
@@ -81,6 +91,7 @@ void setup() {
 
   analogOk = analogSampler.begin(kAnalogConfig);
   if (!analogOk) Serial.println(F("{\"error\":\"analog init failed\"}"));
+  analogTickDivider = 0;
 
   digitalMonitorOk = digitalInputMonitor.begin(kDigitalMonitorConfig);
   if (!digitalMonitorOk) Serial.println(F("{\"error\":\"digital init failed\"}"));

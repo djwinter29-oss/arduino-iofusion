@@ -34,8 +34,9 @@ inline void advanceMillis(unsigned long deltaMs) {
 
 extern uint8_t mockPortIn[8];
 extern uint8_t mockPortOut[8];
-extern int mockAnalogValues[16];
 extern uint8_t mockPinModes[64];
+extern int mockAnalogValues[16];
+extern uint32_t mockAnalogReadCount;
 extern int mockNullInputPort;
 extern int mockNullOutputPort;
 extern int mockZeroMaskPin;
@@ -45,6 +46,7 @@ inline void pinMode(uint8_t pin, uint8_t mode) {
   if (pin < 64) mockPinModes[pin] = mode;
 }
 inline uint8_t digitalPinToPort(uint8_t pin) {
+  if (pin >= 64) return NOT_A_PIN;
   return static_cast<uint8_t>(pin / 8);
 }
 
@@ -66,6 +68,7 @@ inline volatile uint8_t* portOutputRegister(uint8_t port) {
 }
 
 inline int analogRead(uint8_t pin) {
+  ++mockAnalogReadCount;
   if (pin >= 16) return 0;
   return mockAnalogValues[pin];
 }

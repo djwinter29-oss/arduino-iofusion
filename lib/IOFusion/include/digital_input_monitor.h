@@ -61,6 +61,12 @@ class DigitalInputMonitor {
   float getDutyCycle(uint8_t idx) const;
   /// @brief Returns the latest duty-cycle estimate in permille of full scale.
   uint16_t getDutyPermille(uint8_t idx) const;
+  /// @brief Returns true when the currently published measurement frame is stale
+  /// because one or more ticks were dropped before a replacement frame could be published.
+  bool isFrameStale() const;
+  /// @brief Returns a monotonic sequence number for the published measurement frame.
+  /// The value increments each time updateIfReady() publishes a new frame.
+  uint32_t getFrameSequence() const;
   /// @brief Returns the cumulative count of timer ticks skipped because the previous window
   /// has not yet been drained by updateIfReady().
   uint32_t getOverrunCount() const;
@@ -79,6 +85,8 @@ class DigitalInputMonitor {
   volatile uint8_t _lastState[MAX_PINS];
   volatile bool _windowReady = false;
   volatile uint32_t _overrunCount = 0;
+  volatile bool _frameStale = false;
+  uint32_t _frameSequence = 0;
   uint32_t _freqMilliHz[MAX_PINS];
   uint16_t _dutyPermille[MAX_PINS];
 };

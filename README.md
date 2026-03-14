@@ -56,6 +56,8 @@ For reliable square-wave style measurements, keep the input frequency comfortabl
 
 In the default reference firmware configuration, `DigitalInputMonitor` runs at 10 kHz with a 500-tick window ([apps/reference_firmware/src/main.cpp](apps/reference_firmware/src/main.cpp)). That yields a 50 ms measurement window, about 20 Hz frequency resolution, and about 0.2% duty resolution, with best results on signals well below 2.5 kHz.
 
+The same 10 kHz scheduler does not imply a 10 kHz analog sweep. `AnalogSampler` is a best-effort loop-side path with a single pending-request flag, so repeated tick requests coalesce if ADC work is still outstanding. The reference firmware therefore decimates analog requests to a lower rate instead of pretending every IRQ can drive a full six-channel sweep.
+
 ### Encoder generator semantics
 
 `EncoderGenerator` is a **signal generator** driven by two level inputs (`up`, `down`). By default it treats those controls as logic-driven, active-HIGH inputs: it advances one quadrature step per tick when `up` is asserted and `down` is not, and steps backward when `down` is asserted and `up` is not. For direct switch wiring to ground, initialize it with `usePullup=true` and `activeHigh=false`. It does **not** decode a physical quadrature encoder.

@@ -40,6 +40,8 @@ class AnalogSampler {
   bool begin(const uint8_t* channels, uint8_t count);
 
   /// @brief Requests one sampling round from ISR context.
+  /// Repeated calls while a loop-side sampling round is still pending are coalesced
+  /// into a single pending request.
   void onTick();
 
   /// @brief Performs pending ADC reads from loop context.

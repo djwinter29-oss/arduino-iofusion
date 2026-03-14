@@ -33,8 +33,19 @@ void test_firmware_cli_commands() {
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), ":0.000"));
 
   runCmd(cli, "digital?");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"frameSeq\":"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"stale\":"));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"overrunTicks\":"));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"d2\""));
+
+  setDigitalPin(2, false);
+  digitalMonitor.onTick();
+  digitalMonitor.onTick();
+  digitalMonitor.onTick();
+  digitalMonitor.onTick();
+  digitalMonitor.onTick();
+  runCmd(cli, "digital?");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"stale\":true"));
 
   runCmd(cli, "encoder?");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "encoder"));
@@ -176,6 +187,8 @@ void test_firmware_cli_edge_cases() {
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"a1\":3.754"));
 
   runCmd(cli, "digital?");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"frameSeq\":1"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"stale\":false"));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"overrunTicks\":1"));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"d2\""));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), ",\"d3\""));

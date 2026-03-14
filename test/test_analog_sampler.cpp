@@ -18,6 +18,7 @@ void test_analog_sampler_branches() {
   sampler.setVref(-1.0f);
   sampler.setVref(3.3f);
   sampler.onTick();
+  sampler.onTick();
   mockAnalogValues[0] = 1023;
   mockAnalogValues[1] = 256;
   sampler.sampleIfDue();
@@ -25,6 +26,9 @@ void test_analog_sampler_branches() {
   TEST_ASSERT_FLOAT_WITHIN(0.02f, 3.3f, sampler.getValue(0));
   TEST_ASSERT_FLOAT_WITHIN(0.02f, (256.0f * 3.3f) / 1023.0f, sampler.getValue(1));
   TEST_ASSERT_EQUAL_UINT16(3300, sampler.getMillivolts(0));
+  TEST_ASSERT_EQUAL_UINT32(4, mockAnalogReadCount);
+  sampler.sampleIfDue();
+  TEST_ASSERT_EQUAL_UINT32(4, mockAnalogReadCount);
   sampler.setVref(70000.0f);
   TEST_ASSERT_EQUAL_UINT16(3300, sampler.getMillivolts(0));
 }
@@ -36,6 +40,7 @@ void test_analog_sampler_config_edges() {
 
   TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{nullptr, 1, 5.0f}));
   TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{nullptr, 0, 5.0f}));
+  TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{validChannels, 2, 0.0001f}));
   TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{validChannels, 2, 0.0f}));
   TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{validChannels, 2, -1.0f}));
   TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{validChannels, 2, 70000.0f}));

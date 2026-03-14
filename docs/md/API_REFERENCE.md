@@ -66,6 +66,8 @@ Preferred setup:
 
 - `void onTick()`
   - ISR-side trigger: requests one sampling round.
+  - This is a best-effort request, not a guaranteed per-tick conversion contract.
+  - If `sampleIfDue()` has not yet drained the previous request, repeated `onTick()` calls coalesce into one pending sampling round.
 
 - `void sampleIfDue()`
   - Loop-side execution: reads ADC for configured channels when requested.
@@ -111,7 +113,7 @@ Preferred setup:
 
 - `void onTick()`
   - ISR-side sampling and counter accumulation.
-  - If the previous sampling window has not yet been drained, the monitor increments an overrun counter instead of silently sampling stale data.
+  - If the previous sampling window has not yet been drained, the monitor increments an overrun counter and marks the published frame stale instead of silently sampling stale data.
 
 - `void updateIfReady()`
   - Loop-side conversion to frequency (Hz) and duty (%).
@@ -122,6 +124,11 @@ Preferred setup:
 - `float getDutyCycle(uint8_t idx) const`
 - `uint16_t getDutyPermille(uint8_t idx) const`
   - Out-of-range `idx` returns `0.0`.
+- `bool isFrameStale() const`
+  - Returns `true` when the currently published measurement frame has become stale because one or more ticks were dropped before a replacement frame was published.
+- `uint32_t getFrameSequence() const`
+  - Returns a monotonic sequence number for the published measurement frame.
+  - The value increments each time `updateIfReady()` publishes a new frame.
 - `uint32_t getOverrunCount() const`
   - Returns the cumulative number of timer ticks skipped because `updateIfReady()` had not yet drained the completed window.
   - This is a monotonic fault counter, not a per-window statistic.
@@ -239,6 +246,7 @@ Response contract:
 - Errors (stable keys): `{"error":"..."}`.
 - Unknown command: `{"error":"unknown command"}`.
 - `digital?` responses include `overrunTicks` so stale sampling windows are detectable from the reference firmware.
+- `digital?` responses also include `frameSeq` and `stale` so freshness is attached to the reported measurement frame itself.
 
 Parser behavior notes:
 

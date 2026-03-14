@@ -95,6 +95,7 @@ This repository uses a strict ISR-versus-loop ownership model.
 - ISR-owned writes: sample-request flag.
 - Loop-owned writes: sampled values.
 - Protection: request flag is set/cleared inside critical sections.
+- Semantics: the request flag is single-depth. If loop-side ADC work is still pending, additional ISR ticks coalesce rather than queueing multiple analog sweeps.
 
 `DigitalInputMonitor`
 
@@ -137,6 +138,8 @@ This repository uses a strict ISR-versus-loop ownership model.
 For robust duty and edge estimation, a practical target is $f_{in} \le \frac{\text{tickHz}}{4}$.
 
 The default reference firmware wiring in [apps/reference_firmware/src/main.cpp](apps/reference_firmware/src/main.cpp) uses `tickHz = 10000` and `windowTicks = 500`, which yields a 50 ms window, about 20 Hz frequency resolution, and about 0.2% duty resolution.
+
+In the reference firmware, that 10 kHz scheduler is intentionally not used to request an analog sweep on every tick. The analog path is treated as best-effort loop-side work and is decimated to a lower request rate so the six-channel ADC sweep remains physically achievable on an Uno.
 
 ## Repository Layout
 
