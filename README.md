@@ -6,12 +6,10 @@
 > - Architecture: [docs/md/ARCHITECTURE.md](docs/md/ARCHITECTURE.md)
 > - PlatformIO library install/publish/use: [docs/md/PLATFORMIO_LIBRARY.md](docs/md/PLATFORMIO_LIBRARY.md)
 > - Coverage limitations: [docs/md/COVERAGE_LIMITATIONS.md](docs/md/COVERAGE_LIMITATIONS.md)
-> - Arduino scope & roadmap: [docs/md/ARCHITECTURE_ARDUINO_SCOPE.md](docs/md/ARCHITECTURE_ARDUINO_SCOPE.md)
 > - Example sketches: [docs/md/EXAMPLES.md](docs/md/EXAMPLES.md)
 > - Examples quick start: [examples/README.md](examples/README.md)
-> - Release automation plan: [docs/md/RELEASE_AUTOMATION_PLAN.md](docs/md/RELEASE_AUTOMATION_PLAN.md)
+> - Release process: [docs/md/RELEASES.md](docs/md/RELEASES.md)
 > - API reference: [docs/md/API_REFERENCE.md](docs/md/API_REFERENCE.md)
-> - API stability policy: [docs/md/API_STABILITY.md](docs/md/API_STABILITY.md)
 
 ## Quick start (60 seconds)
 

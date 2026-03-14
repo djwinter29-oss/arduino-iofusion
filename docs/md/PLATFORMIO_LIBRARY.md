@@ -57,15 +57,17 @@ In consumer project `platformio.ini`:
 
 ```ini
 lib_deps =
-  djwinter29-oss/IOFusion
+  djwinter29/IOFusion
 ```
 
 Or pin version:
 
 ```ini
 lib_deps =
-  djwinter29-oss/IOFusion@^0.1.0
+  djwinter29/IOFusion@^0.1.0
 ```
+
+PlatformIO package ownership uses `djwinter29`, while the source repository stays on GitHub under `djwinter29-oss`.
 
 ## 5) Basic Usage
 
@@ -131,5 +133,5 @@ pio pkg publish --type library
 ## 8) Unpublish (if a version is bad)
 
 ```bash
-pio pkg unpublish --type library --owner djwinter29-oss --name IOFusion --version <x.y.z>
+pio pkg unpublish --type library --owner djwinter29 --name IOFusion --version <x.y.z>
 ```

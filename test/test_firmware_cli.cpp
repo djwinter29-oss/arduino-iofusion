@@ -1,4 +1,5 @@
 #include <cstring>
+#include <string>
 
 #include <unity.h>
 
@@ -157,6 +158,52 @@ void test_firmware_cli_edge_cases() {
 
   Serial.clearOutput();
   Serial.setInput("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefgh\n");
+  cli.processSerial();
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "unknown command"));
+}
+
+void test_firmware_cli_internal_edges() {
+  AnalogSampler analog;
+  DigitalInputMonitor digitalMonitor;
+  EncoderGenerator encoder;
+  Timer1PWM pwm;
+
+  const uint8_t aPins[] = {0};
+  const uint8_t dPins[] = {2};
+  TEST_ASSERT_TRUE(analog.begin(AnalogSampler::Config{aPins, 1, 5.0f}));
+  TEST_ASSERT_TRUE(
+      digitalMonitor.begin(DigitalInputMonitor::Config{dPins, 1, 2, 1000.0f, false}));
+  TEST_ASSERT_TRUE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
+
+  FirmwareCli cli(analog, digitalMonitor, encoder, pwm, aPins, 1, dPins, 1);
+
+  Serial.clearOutput();
+  Serial.setInput("\r\n");
+  cli.processSerial();
+  TEST_ASSERT_EQUAL_STRING("", Serial.getOutput().c_str());
+
+  Serial.setInput("   \r\n");
+  cli.processSerial();
+  TEST_ASSERT_EQUAL_STRING("", Serial.getOutput().c_str());
+
+  runCmd(cli, "   help   extra");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "help"));
+
+  Serial.clearOutput();
+  advanceMillis(1);
+  Serial.setInput("pwm-freq 500");
+  cli.processSerial();
+  TEST_ASSERT_EQUAL_STRING("", Serial.getOutput().c_str());
+  advanceMillis(10);
+  cli.processSerial();
+  TEST_ASSERT_EQUAL_STRING("", Serial.getOutput().c_str());
+  advanceMillis(100);
+  cli.processSerial();
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
+
+  Serial.clearOutput();
+  std::string longUnknown(96, 'z');
+  Serial.setInput(longUnknown + "\n");
   cli.processSerial();
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "unknown command"));
 }

@@ -1,127 +1,152 @@
 # IOFusion Architecture
 
-## 1) Goals
+## Scope and Intent
 
-IOFusion is a small Arduino-focused component set for **deterministic timing**, with a clear split between:
+IOFusion is an Arduino-focused library for deterministic sampling and signal generation on Uno-class targets.
 
-- **Scope policy:** Arduino-only (Uno-class targets).
-- **Non-goal:** multi-platform HAL support in the current roadmap.
-- See also: [ARCHITECTURE_ARDUINO_SCOPE.md](ARCHITECTURE_ARDUINO_SCOPE.md) for scope and roadmap priorities.
+- Primary goal: reliable Arduino behavior with explicit pin/timer configuration.
+- Current non-goal: cross-platform HAL abstraction.
+- Engineering priorities: API clarity, test quality, documentation quality, and reliable release automation.
 
-- **ISR path**: minimal, fast operations only (flags/counters/state updates)
-- **Main loop path**: heavier work (ADC reads, window math, serial command processing)
+The public product boundary is the library under `lib/IOFusion/`. The code under `apps/reference_firmware/` is a reference composition and test vehicle, not the primary downstream integration surface.
 
-This design helps keep interrupt latency low and behavior predictable.
+## Architectural Split
 
-The library surface is centered on components under `lib/IOFusion/`. Repository-level firmware under `apps/reference_firmware/` exists as a reference composition, not as the primary integration surface.
+The runtime model is intentionally split between interrupt-side bookkeeping and loop-side work.
 
----
+- ISR path: minimal, deterministic operations only.
+- Loop path: ADC reads, window math, CLI parsing, and serial formatting.
 
-## 2) Module Overview
+This keeps interrupt latency low while still allowing useful higher-level behavior.
 
-### Timer2Driver (`lib/IOFusion/include/avr_timer2_driver.h`, `lib/IOFusion/src/avr_timer2_driver.cpp`)
+## Module Overview
 
-- Configures Timer2 at a requested tick rate.
-- Dispatches registered callbacks from ISR context.
-- Used as the heartbeat for periodic sampling / state stepping.
+### Timer2Driver
 
-### AnalogSampler (`lib/IOFusion/include/analog_sampler.h`, `lib/IOFusion/src/analog_sampler.cpp`)
+- Header: `lib/IOFusion/include/avr_timer2_driver.h`
+- Source: `lib/IOFusion/src/avr_timer2_driver.cpp`
+- Role: owns the periodic Timer2 tick and dispatches registered callbacks from ISR context.
 
-- Tracks configured analog channels.
-- `onTick()` marks sampling due.
-- `sampleIfDue()` performs ADC reads in main context.
-- Converts raw ADC to voltage using configurable `Vref`.
+### AnalogSampler
 
-### DigitalInputMonitor (`lib/IOFusion/include/digital_input_monitor.h`, `lib/IOFusion/src/digital_input_monitor.cpp`)
+- Header: `lib/IOFusion/include/analog_sampler.h`
+- Source: `lib/IOFusion/src/analog_sampler.cpp`
+- Role: marks analog sampling due in ISR context and performs ADC reads in `loop()`.
 
-- Samples digital pin states each tick.
-- Accumulates edge/high counts over a time window.
-- `updateIfReady()` computes frequency and duty cycle in main context.
-- This is a sampled estimator, not a hardware input-capture block.
+### DigitalInputMonitor
 
-### EncoderGenerator (`lib/IOFusion/include/encoder_generator.h`, `lib/IOFusion/src/encoder_generator.cpp`)
+- Header: `lib/IOFusion/include/digital_input_monitor.h`
+- Source: `lib/IOFusion/src/digital_input_monitor.cpp`
+- Role: samples digital inputs once per tick, accumulates counts in ISR context, and computes frequency/duty in `loop()`.
+- Constraint: sampled estimator only; it is not a hardware input-capture block.
 
-- **Generates** quadrature A/B output patterns.
-- Uses `up/down` input pins as direction control.
-- Maintains logical position and direction state.
+### EncoderGenerator
 
-### Timer1PWM (`lib/IOFusion/include/avr_timer1_pwm.h`, `lib/IOFusion/src/avr_timer1_pwm.cpp`)
+- Header: `lib/IOFusion/include/encoder_generator.h`
+- Source: `lib/IOFusion/src/encoder_generator.cpp`
+- Role: generates quadrature A/B output steps from `up` and `down` level inputs.
 
-- Configures Timer1 PWM output (Uno OC1A/OC1B, pins 9/10).
-- Controls output frequency and per-channel duty cycle.
+### Timer1PWM
 
-### Config Structs (public library setup model)
+- Header: `lib/IOFusion/include/avr_timer1_pwm.h`
+- Source: `lib/IOFusion/src/avr_timer1_pwm.cpp`
+- Role: drives Uno Timer1 PWM outputs on D9/D10 with configurable frequency and duty.
 
-- Each public component exposes a `Config` struct for pin and timing setup.
-- This keeps Arduino-specific pin wiring explicit without introducing a separate HAL abstraction.
-- Convenience overloads remain available, but config objects are the preferred library-facing API.
+### Reference Firmware
 
-### Reference firmware (`apps/reference_firmware/*`)
+- Header: `apps/reference_firmware/include/firmware_cli.h`
+- Sources: `apps/reference_firmware/src/main.cpp`, `apps/reference_firmware/src/firmware_cli.cpp`
+- Role: composes the library into a serial-driven reference application.
 
-- Integrates all modules into a serial-controlled example firmware.
-- Provides text commands for query/control.
-- Is intentionally outside the library source tree so the library remains the primary product boundary.
+## Configuration Model
 
----
+Each public component exposes a typed `Config` struct. That keeps wiring, timing, pull-up policy, and frequency choices explicit without hiding Arduino-specific details behind another abstraction layer.
 
-## 3) Runtime Data Flow
+Convenience overloads remain available, but config structs are the preferred setup surface.
 
-1. `Timer2Driver` ISR fires at fixed interval.
-2. ISR callbacks run short handlers:
+## Runtime Data Flow
+
+1. `Timer2Driver` fires at a fixed cadence.
+2. ISR callbacks do only short state updates:
    - `AnalogSampler::onTick()`
-  - `DigitalInputMonitor::onTick()`
+   - `DigitalInputMonitor::onTick()`
    - `EncoderGenerator::onTick()`
 3. `loop()` performs deferred work:
    - `AnalogSampler::sampleIfDue()`
-  - `DigitalInputMonitor::updateIfReady()`
-   - command parsing and responses
+   - `DigitalInputMonitor::updateIfReady()`
+   - CLI processing and serial responses
 
-This flow preserves deterministic sampling while avoiding expensive ISR operations.
+## Concurrency Rules
 
----
+This repository uses a strict ISR-versus-loop ownership model.
 
-## 4) Timing Contract
+1. ISR code should only set flags, update counters, or step tiny state machines.
+2. Shared multi-byte state must be protected with `noInterrupts()/interrupts()`.
+3. Loop-side code should snapshot and clear ISR-owned counters inside one critical section.
+4. Dynamic allocation and long-running operations do not belong in ISR code.
+
+### Shared-State Ownership By Module
+
+`AnalogSampler`
+
+- ISR-owned writes: sample-request flag.
+- Loop-owned writes: sampled values.
+- Protection: request flag is set/cleared inside critical sections.
+
+`DigitalInputMonitor`
+
+- ISR-owned writes: sample count, edge counters, high counters, last-state cache, window-ready flag.
+- Loop-owned writes: computed frequency and duty arrays.
+- Protection: `updateIfReady()` snapshots and clears ISR counters inside one critical section.
+
+`EncoderGenerator`
+
+- ISR-owned writes: position, direction, waveform state, output pins.
+- Loop-side reads: `getPosition()`, `getDirection()`.
+- Protection: getters and `reset()` use critical sections.
+
+`Timer1PWM`
+
+- Loop-owned writes: duty cache and timer register programming.
+- Protection: register changes are wrapped in critical sections.
+
+`Timer2Driver`
+
+- ISR-owned reads/calls: active-driver pointer and callback table.
+- Loop-owned writes: driver activation and callback registration.
+- Protection: ownership handoff and callback-table mutations are guarded.
+
+## Timing Contract
 
 - Keep ISR callbacks short and non-blocking.
-- Keep `loop()` responsive; long blocking code will delay deferred calculations.
-- Choose digital measurement windows (`windowTicks`) based on required response speed vs. stability.
+- Keep `loop()` responsive; blocking code delays deferred work.
+- Size `windowTicks` and `tickHz` around the signal envelope you actually care about.
 
-### DigitalInputMonitor Envelope And Aliasing Limits
+### DigitalInputMonitor Limits
 
-`DigitalInputMonitor` measures digital signals by sampling them once per timer tick. It does not timestamp edges in hardware. That means:
+`DigitalInputMonitor` measures by sampling once per tick rather than timestamping physical edges. That means:
 
 - transitions faster than $\frac{\text{tickHz}}{2}$ alias,
-- narrow pulses shorter than one tick may be missed,
+- pulses shorter than one tick can be missed,
 - frequency resolution is $\frac{\text{tickHz}}{\text{windowTicks}}$ Hz,
 - duty resolution is approximately $\frac{100}{\text{windowTicks}}\%$.
 
-For practical use, keep target input frequencies comfortably below Nyquist. A conservative guidance point is $f_{in} \le \frac{\text{tickHz}}{4}$ when you care about both frequency and duty-cycle fidelity.
+For robust duty and edge estimation, a practical target is $f_{in} \le \frac{\text{tickHz}}{4}$.
 
-The default reference firmware wiring in [apps/reference_firmware/src/main.cpp](apps/reference_firmware/src/main.cpp) uses `tickHz = 10000` and `windowTicks = 500`, so the measurement window is 50 ms, frequency resolution is about 20 Hz, and duty resolution is about 0.2%. Higher-frequency or narrow-pulse measurements should move to hardware capture or dedicated edge interrupts.
+The default reference firmware wiring in [apps/reference_firmware/src/main.cpp](apps/reference_firmware/src/main.cpp) uses `tickHz = 10000` and `windowTicks = 500`, which yields a 50 ms window, about 20 Hz frequency resolution, and about 0.2% duty resolution.
 
----
+## Repository Layout
 
-## 5) Repository Layout
+- Core library: `lib/IOFusion/include`, `lib/IOFusion/src`
+- Reference firmware: `apps/reference_firmware/include`, `apps/reference_firmware/src`
+- Tests: `test/`
+- Tooling and CI: `.github/workflows/`, `tools/`, `Doxyfile`
 
-- Core library code:
-  - `lib/IOFusion/include`
-  - `lib/IOFusion/src`
-- Reference firmware:
-  - `apps/reference_firmware/include`
-  - `apps/reference_firmware/src`
-- Tests:
-  - `test/`
-- CI/docs tooling:
-  - `.github/workflows/`
-  - `Doxyfile`, `tools/`
+## Packaging Notes
 
----
+PlatformIO packaging is driven from `library.json` at repo root.
 
-## 6) Library Packaging Notes
+- `build.includeDir = lib/IOFusion/include`
+- `build.srcDir = lib/IOFusion/src`
 
-The project is configured for PlatformIO Library Registry via `library.json` at repo root. The library build section points to:
-
-- `includeDir`: `lib/IOFusion/include`
-- `srcDir`: `lib/IOFusion/src`
-
-This allows publishing only library-relevant code while keeping firmware app/test/CI files in the same repository.
+That keeps the publishable package focused on the library while still allowing the repo to carry the reference firmware, tests, docs, and automation.

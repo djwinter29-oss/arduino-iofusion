@@ -70,6 +70,12 @@ void test_digital_input_monitor_config_edges() {
                                                                      false}));
   TEST_ASSERT_FALSE(digitalMonitor.begin(nullptr, 1, 4, 1000.0f, false));
   TEST_ASSERT_FALSE(digitalMonitor.begin(pins, 9, 4, 1000.0f, false));
+  mockNullInputPort = digitalPinToPort(2);
+  TEST_ASSERT_FALSE(digitalMonitor.begin(pins, 1, 4, 1000.0f, false));
+  mockNullInputPort = -1;
+  mockZeroMaskPin = 2;
+  TEST_ASSERT_FALSE(digitalMonitor.begin(pins, 1, 4, 1000.0f, false));
+  mockZeroMaskPin = -1;
   TEST_ASSERT_TRUE(digitalMonitor.begin(DigitalInputMonitor::Config{pins, 1, 2, 1000.0f, false}));
 
   setDigitalPin(2, true);
@@ -104,4 +110,8 @@ void test_digital_input_monitor_config_edges() {
 
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, digitalMonitor.getFrequency(0));
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, digitalMonitor.getDutyCycle(0));
+
+  mirror.pinPortIn[0] = nullptr;
+  mirror.windowReady = false;
+  digitalMonitor.onTick();
 }

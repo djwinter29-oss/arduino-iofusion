@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
   RUN_TEST(test_encoder_generator_config_edges);
   RUN_TEST(test_firmware_cli_commands);
   RUN_TEST(test_firmware_cli_edge_cases);
+  RUN_TEST(test_firmware_cli_internal_edges);
 
   return UNITY_END();
 }

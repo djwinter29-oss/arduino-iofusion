@@ -34,5 +34,6 @@ void test_encoder_generator_branches();
 void test_encoder_generator_config_edges();
 void test_firmware_cli_commands();
 void test_firmware_cli_edge_cases();
+void test_firmware_cli_internal_edges();
 
 #endif

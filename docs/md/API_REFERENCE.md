@@ -1,20 +1,49 @@
-# API Reference (Arduino)
+# API Reference
 
-This document describes the current public API contract for IOFusion.
+This document describes the current public API contract and stability policy for IOFusion.
 
-## Scope statement
+## Scope Statement
 
-- Target: Arduino ecosystem (Uno-class targets).
-- Policy: keep API/implementation simple and stable for Arduino use cases.
-- Non-goal for now: generic cross-platform HAL abstraction.
+- Target: Arduino ecosystem, primarily Uno-class targets.
+- Policy: keep the API simple and stable for Arduino use cases.
+- Non-goal: generic cross-platform HAL abstraction in the current phase.
 
-## Design contract
+## General Behavioral Contract
 
-- **ISR-safe entry points**: `onTick()` style methods should stay minimal.
-- **Loop-side processing**: heavier math/formatting runs in loop-side methods.
-- **Non-blocking expectation**: call update methods frequently from `loop()`.
+- ISR-facing entry points such as `onTick()` must remain minimal.
+- Loop-facing methods perform heavier math, formatting, and deferred work.
+- Call update methods regularly from `loop()`; the library is not designed around long blocking sections.
 
----
+## Stability Policy
+
+### Stable API
+
+Public headers under `lib/IOFusion/include/` are considered stable unless documented otherwise.
+
+- Backward compatibility is expected across patch and minor releases.
+- Breaking changes should be reserved for a major version bump.
+
+### Internal API
+
+Implementation files under `lib/IOFusion/src/` and the reference firmware under `apps/reference_firmware/` are internal.
+
+- They may change without notice.
+- They are not the intended integration surface for downstream consumers.
+
+### Experimental API
+
+Any API explicitly marked experimental in docs or release notes may change between minor releases.
+
+### Versioning Rules
+
+- PATCH (`x.y.Z`): bug fixes, tests, docs, no intended public API break.
+- MINOR (`x.Y.z`): backward-compatible additions.
+- MAJOR (`X.y.z`): breaking API changes.
+
+### Deprecation Policy
+
+- Deprecations should be called out in release notes or docs before removal.
+- Prefer at least one minor release of deprecation runway before deleting stable surface area.
 
 ## `AnalogSampler`
 
