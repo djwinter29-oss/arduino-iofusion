@@ -174,14 +174,18 @@ lib_deps =
 ### Publish to PlatformIO Registry
 
 1. Ensure `library.json` fields are correct (name/version/authors/repository).
-2. Bump `version` for each release.
-3. Publish:
+2. Create a Git tag in the form `vX.Y.Z` for the version you want to publish.
+3. The release workflow stamps `library.json` with that tag version before publishing to PlatformIO, so the tag is the release source of truth.
+4. Publish by pushing the tag or by manually running the `Release Publish (PlatformIO)` workflow with the same tag.
+
+Manual CLI alternative:
 
 ```bash
+python tools/set_library_version.py X.Y.Z
 pio pkg publish --type library
 ```
 
-4. If needed, unpublish a bad version:
+5. If needed, unpublish a bad version:
 
 ```bash
 pio pkg unpublish --type library --owner <owner> --name IOFusion --version <x.y.z>

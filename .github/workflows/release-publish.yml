@@ -7,6 +7,12 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to publish, for example v1.2.3'
+        required: true
+        type: string
 
 env:
   PLATFORMIO_OWNER: djwinter29
@@ -17,26 +23,50 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  resolve-release:
+    name: Resolve release version
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.resolve.outputs.release_tag }}
+      release_version: ${{ steps.resolve.outputs.release_version }}
+    steps:
+      - name: Resolve tag/version from trigger
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RELEASE_TAG="${{ inputs.release_tag }}"
+          else
+            RELEASE_TAG="${GITHUB_REF_NAME}"
+          fi
+
+          if ! [[ "${RELEASE_TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release tags must match vX.Y.Z or vX.Y.Z-suffix; got ${RELEASE_TAG}" >&2
+            exit 1
+          fi
+
+          RELEASE_VERSION="${RELEASE_TAG#v}"
+          echo "release_tag=${RELEASE_TAG}" >> "${GITHUB_OUTPUT}"
+          echo "release_version=${RELEASE_VERSION}" >> "${GITHUB_OUTPUT}"
+
   validate:
     name: Validate before publish
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [resolve-release]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ needs.resolve-release.outputs.release_tag }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Validate release tag format
+      - name: Show resolved release version
         run: |
-          if ! [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
-            echo "Release tags must match vX.Y.Z or vX.Y.Z-suffix; got ${GITHUB_REF_NAME}" >&2
-            exit 1
-          fi
+          echo "Release tag: ${{ needs.resolve-release.outputs.release_tag }}"
+          echo "Release version: ${{ needs.resolve-release.outputs.release_version }}"
 
       - name: Install dependencies
         run: |
@@ -54,25 +84,23 @@ jobs:
 
   publish:
     name: Publish to PlatformIO Registry
-    needs: [validate]
+    needs: [resolve-release, validate]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ needs.resolve-release.outputs.release_tag }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Validate release tag format
+      - name: Show resolved release version
         run: |
-          if ! [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
-            echo "Release tags must match vX.Y.Z or vX.Y.Z-suffix; got ${GITHUB_REF_NAME}" >&2
-            exit 1
-          fi
+          echo "Release tag: ${{ needs.resolve-release.outputs.release_tag }}"
+          echo "Release version: ${{ needs.resolve-release.outputs.release_version }}"
 
       - name: Install dependencies
         run: |
@@ -81,9 +109,11 @@ jobs:
 
       - name: Set package version from git tag
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          TAG_VERSION="${{ needs.resolve-release.outputs.release_version }}"
           echo "Using tag version: ${TAG_VERSION}"
           python tools/set_library_version.py "${TAG_VERSION}"
+          ACTUAL_VERSION=$(python -c 'import json; print(json.load(open("library.json", encoding="utf-8"))["version"])')
+          test "${ACTUAL_VERSION}" = "${TAG_VERSION}"
           echo "Updated library.json:"
           cat library.json
 
@@ -114,10 +144,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
+          TAG="${{ needs.resolve-release.outputs.release_tag }}"
+          VERSION="${{ needs.resolve-release.outputs.release_version }}"
           REGISTRY_URL="https://registry.platformio.org/libraries/${PLATFORMIO_OWNER}/${PLATFORMIO_PACKAGE}"
-          INSTALL_SNIPPET=$(printf 'lib_deps =\n  %s/%s@^%s' "${PLATFORMIO_OWNER}" "${PLATFORMIO_PACKAGE}" "${VERSION}")
+          INSTALL_SNIPPET=$(printf 'lib_deps =\n  %s/%s@%s' "${PLATFORMIO_OWNER}" "${PLATFORMIO_PACKAGE}" "${VERSION}")
+          CODE_FENCE='```'
 
           EXTRA_NOTES=$(cat <<EOF
 
@@ -126,9 +157,9 @@ jobs:
 - Version: ${VERSION}
 
 ### Install
-\`\`\`ini
+${CODE_FENCE}ini
 ${INSTALL_SNIPPET}
-\`\`\`
+${CODE_FENCE}
 EOF
 )
 
