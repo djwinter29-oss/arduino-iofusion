@@ -117,7 +117,7 @@ jobs:
           echo "Updated library.json:"
           cat library.json
 
-      - name: Login to PlatformIO
+      - name: Validate PlatformIO auth token
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
         run: |
@@ -125,7 +125,6 @@ jobs:
             echo "Missing required secret: PLATFORMIO_AUTH_TOKEN" >&2
             exit 1
           fi
-          pio account login --token "${PLATFORMIO_AUTH_TOKEN}"
           pio account show
 
       - name: Dry-run package pack
