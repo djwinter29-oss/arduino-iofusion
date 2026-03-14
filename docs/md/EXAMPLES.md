@@ -5,12 +5,13 @@ This file lists quick-start examples included in this repository.
 ## Available sketches
 
 - `examples/basic_usage/basic_usage.ino`
-  - Minimal initialization of AnalogSampler, DigiIn, EncoderGenerator, and Timer1PWM.
+  - Minimal initialization of AnalogSampler, DigitalInputMonitor, EncoderGenerator, and Timer1PWM.
   - Expected serial: periodic status/JSON-style output after setup.
 
 - `examples/frequency_monitor/frequency_monitor.ino`
-  - Measures digital frequency/duty using `DigiIn` + `Timer2Driver` ISR tick.
+  - Measures digital frequency/duty using `DigitalInputMonitor` + `Timer2Driver` ISR tick.
   - Expected serial: JSON lines like `{\"d2\":{\"freq\":... ,\"duty\":...},\"d3\":...}`.
+  - Measurement model: sampled estimator, best suited to signals well below the sampling Nyquist limit.
 
 - `examples/pwm_dual_channel/pwm_dual_channel.ino`
   - Drives Timer1 PWM on Uno pins 9/10 and sweeps dual-channel duty cycles.
@@ -31,6 +32,8 @@ pio device monitor -b 115200
 
 ## Wiring quick notes (Arduino Uno)
 
+These examples assume pin and timer assignments are planned ahead of time. IOFusion keeps the runtime lightweight and does not try to detect all cross-module wiring overlaps for you.
+
 - `basic_usage`
   - Analog: A0, A1
   - Digital input monitor: D2, D3
@@ -39,6 +42,7 @@ pio device monitor -b 115200
 
 - `frequency_monitor`
   - Measured inputs: D2, D3 (configured as `INPUT_PULLUP`)
+  - Review the configured `tickHz` and `windowTicks` before using it as a frequency reference; it is not a hardware capture example.
 
 - `pwm_dual_channel`
   - PWM outputs: CH0=D9 (OC1A), CH1=D10 (OC1B)
@@ -51,6 +55,7 @@ pio device monitor -b 115200
 
 - `frequency_monitor` and `encoder_signal_generator` use input pins configured as `INPUT_PULLUP`.
 - For deterministic results, avoid heavy blocking work in `loop()`.
+- For high-frequency or narrow-pulse measurements, prefer hardware capture or dedicated edge interrupts over `DigitalInputMonitor`.
 
 ## Troubleshooting (quick)
 

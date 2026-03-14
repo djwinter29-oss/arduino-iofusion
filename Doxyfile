@@ -1,20 +1,26 @@
 # Doxyfile for arduino-iofusion / IOFusion
 
 PROJECT_NAME           = "IOFusion"
-PROJECT_BRIEF          = "Deterministic timer-driven sampling & signal generation helpers for Arduino"
+PROJECT_BRIEF          = "Arduino-focused library for deterministic sampling and signal generation"
 OUTPUT_DIRECTORY       = docs/doxygen
 CREATE_SUBDIRS         = NO
+FULL_PATH_NAMES        = NO
+STRIP_FROM_PATH        = .
 
 # Inputs
-INPUT                  = lib/IOFusion/include lib/IOFusion/src src
-FILE_PATTERNS          = *.h *.hpp *.c *.cpp
+INPUT                  = README.md docs/md lib/IOFusion/include lib/IOFusion/src
+FILE_PATTERNS          = *.h *.hpp *.c *.cpp *.md
 RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */test/* */examples/* */apps/reference_firmware/*
+USE_MDFILE_AS_MAINPAGE = README.md
 EXTRACT_ALL            = YES
 EXTRACT_PRIVATE        = NO
 EXTRACT_STATIC         = YES
 JAVADOC_AUTOBRIEF      = YES
 OPTIMIZE_OUTPUT_FOR_C  = NO
 OPTIMIZE_OUTPUT_JAVA   = NO
+MARKDOWN_SUPPORT       = YES
+TOC_INCLUDE_HEADINGS   = 2
 
 # Warnings
 WARN_IF_UNDOCUMENTED   = NO
@@ -23,16 +29,20 @@ WARN_AS_ERROR          = NO
 # Graphs
 HAVE_DOT               = YES
 DOT_NUM_THREADS        = 2
-CLASS_DIAGRAMS         = YES
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
 CALL_GRAPH             = YES
 CALLER_GRAPH           = YES
 UML_LOOK               = YES
 DOT_IMAGE_FORMAT       = svg
 INTERACTIVE_SVG        = YES
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
 
 # HTML
 GENERATE_HTML          = YES
 HTML_OUTPUT            = html
+GENERATE_TREEVIEW      = YES
 
 # LaTeX/PDF
 GENERATE_LATEX         = YES
@@ -40,6 +50,3 @@ LATEX_OUTPUT           = latex
 PDF_HYPERLINKS         = YES
 USE_PDFLATEX           = YES
 LATEX_BATCHMODE        = YES
-
-# Mermaid (doxygen 1.9.8 supports it if enabled)
-HAVE_DOT               = YES

@@ -20,7 +20,6 @@
 #define _BV(bit) (1U << (bit))
 #endif
 
-inline void pinMode(uint8_t, uint8_t) {}
 inline void noInterrupts() {}
 inline void interrupts() {}
 inline void delayMicroseconds(unsigned int) {}
@@ -35,28 +34,40 @@ inline void advanceMillis(unsigned long deltaMs) {
 
 extern uint8_t mockPortIn[8];
 extern uint8_t mockPortOut[8];
+extern uint8_t mockPinModes[64];
 extern int mockAnalogValues[16];
+extern uint32_t mockAnalogReadCount;
+extern int mockNullInputPort;
+extern int mockNullOutputPort;
+extern int mockZeroMaskPin;
 
+inline void pinMode(uint8_t pin, uint8_t mode) {
+  if (pin < 64) mockPinModes[pin] = mode;
+}
 inline uint8_t digitalPinToPort(uint8_t pin) {
   if (pin >= 64) return NOT_A_PIN;
   return static_cast<uint8_t>(pin / 8);
 }
 
 inline uint8_t digitalPinToBitMask(uint8_t pin) {
+  if (static_cast<int>(pin) == mockZeroMaskPin) return 0;
   return static_cast<uint8_t>(1U << (pin % 8));
 }
 
 inline volatile uint8_t* portInputRegister(uint8_t port) {
   if (port >= 8) return nullptr;
+  if (static_cast<int>(port) == mockNullInputPort) return nullptr;
   return &mockPortIn[port];
 }
 
 inline volatile uint8_t* portOutputRegister(uint8_t port) {
   if (port >= 8) return nullptr;
+  if (static_cast<int>(port) == mockNullOutputPort) return nullptr;
   return &mockPortOut[port];
 }
 
 inline int analogRead(uint8_t pin) {
+  ++mockAnalogReadCount;
   if (pin >= 16) return 0;
   return mockAnalogValues[pin];
 }

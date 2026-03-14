@@ -1,12 +1,13 @@
 #include <Arduino.h>
 
-#include "pwm.h"
+#include "avr_timer1_pwm.h"
 
 namespace {
 Timer1PWM pwm;
 unsigned long lastStepMs = 0;
 float dutyA = 0.0f;
 float dutyB = 100.0f;
+const Timer1PWM::Config kPwmConfig(1000.0f);
 }  // namespace
 
 void setup() {
@@ -15,7 +16,7 @@ void setup() {
 
   // Timer1 PWM output on Arduino Uno:
   // channel 0 -> pin 9 (OC1A), channel 1 -> pin 10 (OC1B)
-  if (!pwm.begin(1000.0f)) {
+  if (!pwm.begin(kPwmConfig)) {
     Serial.println(F("{\"error\":\"pwm init failed\"}"));
     return;
   }

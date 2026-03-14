@@ -6,12 +6,18 @@
 > - Architecture: [docs/md/ARCHITECTURE.md](docs/md/ARCHITECTURE.md)
 > - PlatformIO library install/publish/use: [docs/md/PLATFORMIO_LIBRARY.md](docs/md/PLATFORMIO_LIBRARY.md)
 > - Coverage limitations: [docs/md/COVERAGE_LIMITATIONS.md](docs/md/COVERAGE_LIMITATIONS.md)
-> - Arduino scope & roadmap: [docs/md/ARCHITECTURE_ARDUINO_SCOPE.md](docs/md/ARCHITECTURE_ARDUINO_SCOPE.md)
 > - Example sketches: [docs/md/EXAMPLES.md](docs/md/EXAMPLES.md)
 > - Examples quick start: [examples/README.md](examples/README.md)
-> - Release automation plan: [docs/md/RELEASE_AUTOMATION_PLAN.md](docs/md/RELEASE_AUTOMATION_PLAN.md)
+> - Release process: [docs/md/RELEASES.md](docs/md/RELEASES.md)
 > - API reference: [docs/md/API_REFERENCE.md](docs/md/API_REFERENCE.md)
-> - API stability policy: [docs/md/API_STABILITY.md](docs/md/API_STABILITY.md)
+
+API documentation site generation:
+
+```bash
+doxygen Doxyfile
+```
+
+The generated site is written to `docs/doxygen/html/index.html`.
 
 ## Quick start (60 seconds)
 
@@ -33,7 +39,7 @@
  pio device monitor -b 115200
 ```
 
-Basic PlatformIO project targeting the Arduino Uno (ATmega328P).
+Arduino-focused library package with a reference firmware for Arduino Uno-class targets.
 
 ## IOFusion design
 
@@ -41,13 +47,28 @@ IOFusion is a small set of hardware helpers focused on deterministic, timer-driv
 
 - `Timer2Driver` provides a periodic ISR tick for scheduling fast tasks.
 - `AnalogSampler` defers ADC reads to `loop()` while the ISR only sets a flag.
-- `DigiIn` samples digital inputs in the ISR and computes frequency/duty in `loop()`.
+- `DigitalInputMonitor` samples digital inputs in the ISR and computes frequency/duty in `loop()`.
 - `EncoderGenerator` produces a quadrature output and tracks position/direction.
 - `Timer1PWM` configures Timer1 PWM on OC1A/OC1B (pins 9/10).
 
+#### DigitalInputMonitor measurement limits
+
+`DigitalInputMonitor` is a sampled digital estimator, not a hardware input-capture peripheral. It observes each pin once per timer tick, counts sampled HIGH time, and counts sampled rising edges over a fixed window. That has a few direct consequences:
+
+- Pulses narrower than one tick can be missed entirely.
+- If the signal toggles faster than half the tick rate, aliasing is unavoidable.
+- Frequency resolution is one counted edge per window: $\Delta f = \frac{\text{tickHz}}{\text{windowTicks}}$.
+- Duty-cycle resolution is one sample per window: $\Delta duty \approx \frac{100}{\text{windowTicks}}\%$.
+
+For reliable square-wave style measurements, keep the input frequency comfortably below Nyquist; as a practical rule, target $f_{in} \le \frac{\text{tickHz}}{4}$ if both duty and edge count matter. For higher-frequency or narrow-pulse measurements, use hardware capture or edge interrupts instead of `DigitalInputMonitor`.
+
+In the default reference firmware configuration, `DigitalInputMonitor` runs at 10 kHz with a 500-tick window ([apps/reference_firmware/src/main.cpp](apps/reference_firmware/src/main.cpp)). That yields a 50 ms measurement window, about 20 Hz frequency resolution, and about 0.2% duty resolution, with best results on signals well below 2.5 kHz.
+
+The same 10 kHz scheduler does not imply a 10 kHz analog sweep. `AnalogSampler` is a best-effort loop-side path with a single pending-request flag, so repeated tick requests coalesce if ADC work is still outstanding. The reference firmware therefore decimates analog requests to a lower rate instead of pretending every IRQ can drive a full six-channel sweep.
+
 ### Encoder generator semantics
 
-`EncoderGenerator` is a **signal generator** driven by two level inputs (`up`, `down`). It advances one quadrature step per tick when `up` is HIGH and `down` is LOW, and steps backward when `down` is HIGH and `up` is LOW. It does **not** decode a physical quadrature encoder.
+`EncoderGenerator` is a **signal generator** driven by two level inputs (`up`, `down`). By default it treats those controls as logic-driven, active-HIGH inputs: it advances one quadrature step per tick when `up` is asserted and `down` is not, and steps backward when `down` is asserted and `up` is not. For direct switch wiring to ground, initialize it with `usePullup=true` and `activeHigh=false`. It does **not** decode a physical quadrature encoder.
 
 ### Data flow
 
@@ -55,7 +76,7 @@ IOFusion is a small set of hardware helpers focused on deterministic, timer-driv
 ```mermaid
 flowchart TD
     T2[Timer2Driver ISR] --> AS[AnalogSampler flag]
-    T2 --> DI[DigiIn counters]
+    T2 --> DI[DigitalInputMonitor counters]
     T2 --> EN[EncoderGenerator state]
 
     LOOP[loop] --> AS
@@ -80,6 +101,8 @@ flowchart TD
 
 To keep measurements accurate, `loop()` should run frequently. If the loop stalls for long periods, analog sampling and digital window updates will lag. As a rule of thumb, keep worst-case loop latency well below the digital measurement window duration.
 
+For `DigitalInputMonitor`, also size `tickHz` and `windowTicks` around the actual signal envelope you need to observe. A larger window improves stability and resolution but increases latency; a faster tick improves observability but increases ISR load.
+
 #### Analog reference voltage
 
 `AnalogSampler` scales readings using a configurable reference voltage (default 5.0V). If your board uses a different $V_{ref}$, set it at startup with `analogSampler.setVref(<volts>)` after `begin()`.
@@ -88,25 +111,52 @@ To keep measurements accurate, `loop()` should run frequently. If the loop stall
 
 - Library headers: [lib/IOFusion/include](lib/IOFusion/include)
 - Library sources: [lib/IOFusion/src](lib/IOFusion/src)
-- Firmware entry: [src/main.cpp](src/main.cpp)
-- Command line interface: [src/cmdline.h](src/cmdline.h) and [src/cmdline.cpp](src/cmdline.cpp)
+- Reference firmware entry: [apps/reference_firmware/src/main.cpp](apps/reference_firmware/src/main.cpp)
+- Reference firmware CLI: [apps/reference_firmware/include/firmware_cli.h](apps/reference_firmware/include/firmware_cli.h) and [apps/reference_firmware/src/firmware_cli.cpp](apps/reference_firmware/src/firmware_cli.cpp)
+
+### Configuration model
+
+The library is intentionally Arduino-specific, but board wiring is left to the caller. Public setup APIs now provide typed `Config` structs so pin assignments, timing parameters, pull-up policy, and frequency selection stay explicit and readable at the call site.
+
+IOFusion intentionally keeps configuration lightweight: it does not perform exhaustive runtime checks for overlapping pin assignments or timer-resource conflicts across modules. In the intended Arduino/Uno use case these mappings are chosen up front, remain effectively compile-time design decisions, and do not rely on dynamic allocation or late resource discovery. It is the caller's responsibility to ensure configured pins and timer users do not overlap.
+
+All `begin()` calls are intended to happen at board startup, typically in `setup()`. The normal runtime model is fixed-configuration operation rather than repeated reinitialization of modules after the system is already running.
 
 ## Command line interface
 
 The firmware exposes a simple serial command line for querying sensors and controlling PWM. Commands are ASCII and return JSON-like responses.
+It is intended both for occasional manual bring-up/debug use from a serial terminal and for low-rate host polling from a supervisory application. A Python app polling about once per second is a normal operating model for the reference firmware.
 
 Supported commands:
 
 - `analog?` — returns analog voltages for configured channels.
-- `digital?` — returns frequency and duty cycle for configured digital inputs.
+- `digital?` — returns one coherent published measurement frame for the configured digital inputs, including `frameSeq`, `stale`, `overrunTicks`, frequency, and duty cycle.
 - `encoder?` — returns encoder direction and position.
+- `all?` — returns analog fields, the coherent digital measurement frame, and encoder state in one response. This is a convenience aggregate, not a whole-system atomic snapshot: the digital portion is copied from one published frame, while analog and encoder values are read live and may reflect slightly different instants.
 - `pwm-freq <hz>` — sets Timer1 PWM frequency.
 - `pwm-duty <ch> <pct>` — sets PWM duty for channel 0 or 1.
+- `reset` — requests an immediate board reset. On AVR targets the firmware acknowledges the command and then triggers a watchdog reset. This is intentionally an unguarded host-issued systemwide reset request in the reference firmware, not a confirmation-gated maintenance verb.
 - `help` — prints a short help string.
 
 #### Error reporting
 
 Initialization failures are reported as JSON errors on Serial (e.g., `{"error":"pwm init failed"}`) to aid diagnosis.
+
+#### Reset command intent
+
+The `reset` command is intentionally sharp-edged in this reference firmware. If a connected host sends `reset`, the intended behavior is an immediate whole-board restart rather than a role-separated or confirmation-gated flow. Host software using the serial interface should therefore treat `reset` as a system-level control action and only emit it deliberately.
+
+#### Host polling helper
+
+For low-rate host polling, the repository includes [tools/poll_all.py](tools/poll_all.py), which sends `all?` in a loop and prints each response. Treat each response as one convenience status sample rather than one strictly simultaneous cross-subsystem measurement.
+
+Example:
+
+```bash
+python tools/poll_all.py /dev/ttyACM0 --baud 115200 --interval 1.0 --pretty
+```
+
+That matches the intended reference-firmware operating model of polling about once per second from a Python app.
 
 ## Use as a PlatformIO library
 
@@ -156,6 +206,9 @@ pio run --target upload
 ## Unit tests and coverage
 
 Host-based unit tests (IOFusion library) run under a native build with mocked Arduino APIs:
+
+- Native coverage intentionally targets loop-side and parser logic only.
+- AVR register drivers (`Timer1PWM`, `Timer2Driver`) are excluded from host coverage and should be validated on real hardware.
 
 - Windows: run [tools/coverage.ps1](tools/coverage.ps1)
 - Linux/macOS: run [tools/coverage.sh](tools/coverage.sh)

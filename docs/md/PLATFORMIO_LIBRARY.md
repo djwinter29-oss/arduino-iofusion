@@ -31,6 +31,11 @@ PlatformIO recommends `include/` + `src/` in the library package. In this mono-r
 - `build.includeDir = lib/IOFusion/include`
 - `build.srcDir = lib/IOFusion/src`
 
+Reference firmware for this repository lives separately under:
+
+- `apps/reference_firmware/include`
+- `apps/reference_firmware/src`
+
 Examples are provided under:
 
 - `examples/basic_usage/basic_usage.ino`
@@ -52,27 +57,29 @@ In consumer project `platformio.ini`:
 
 ```ini
 lib_deps =
-  djwinter29-oss/IOFusion
+  djwinter29/IOFusion
 ```
 
 Or pin version:
 
 ```ini
 lib_deps =
-  djwinter29-oss/IOFusion@^0.1.0
+  djwinter29/IOFusion@^0.1.0
 ```
+
+PlatformIO package ownership uses `djwinter29`, while the source repository stays on GitHub under `djwinter29-oss`.
 
 ## 5) Basic Usage
 
 ```cpp
 #include <Arduino.h>
-#include "analog.h"
-#include "digiin.h"
-#include "encoder.h"
-#include "pwm.h"
+#include "analog_sampler.h"
+#include "avr_timer1_pwm.h"
+#include "digital_input_monitor.h"
+#include "encoder_generator.h"
 
 AnalogSampler analogSampler;
-DigiIn digiIn;
+DigitalInputMonitor digitalInputMonitor;
 EncoderGenerator encoder;
 Timer1PWM pwm;
 
@@ -80,24 +87,23 @@ void setup() {
   const uint8_t analogPins[] = {0, 1};
   const uint8_t digitalPins[] = {2, 3};
 
-  analogSampler.begin(analogPins, 2);
-  analogSampler.setVref(5.0f);
+  analogSampler.begin(AnalogSampler::Config{analogPins, 2, 5.0f});
 
-  digiIn.begin(digitalPins, 2, 500, 1000.0f, true);
-  encoder.begin(8, 11, 12, 13);
+  digitalInputMonitor.begin(DigitalInputMonitor::Config{digitalPins, 2, 500, 1000.0f, true});
+  encoder.begin(EncoderGenerator::Config{8, 11, 12, 13, true, false});
 
-  pwm.begin(1000.0f);
+  pwm.begin(Timer1PWM::Config{1000.0f});
   pwm.setDuty(0, 25.0f);
   pwm.setDuty(1, 75.0f);
 }
 
 void loop() {
   analogSampler.onTick();
-  digiIn.onTick();
+  digitalInputMonitor.onTick();
   encoder.onTick();
 
   analogSampler.sampleIfDue();
-  digiIn.updateIfReady();
+  digitalInputMonitor.updateIfReady();
 }
 ```
 
@@ -127,5 +133,5 @@ pio pkg publish --type library
 ## 8) Unpublish (if a version is bad)
 
 ```bash
-pio pkg unpublish --type library --owner djwinter29-oss --name IOFusion --version <x.y.z>
+pio pkg unpublish --type library --owner djwinter29 --name IOFusion --version <x.y.z>
 ```

@@ -2,24 +2,35 @@
 
 Start here for project documentation.
 
-## Scope
+## Recommended Reading Paths
 
-IOFusion is maintained as an **Arduino-focused library**. Current development priority is reliability, API clarity, and release quality on Arduino/AVR targets rather than multi-platform abstraction.
+- New library user: [PLATFORMIO_LIBRARY.md](PLATFORMIO_LIBRARY.md) then [EXAMPLES.md](EXAMPLES.md)
+- Contributor: [ARCHITECTURE.md](ARCHITECTURE.md) then [API_REFERENCE.md](API_REFERENCE.md)
+- Maintainer: [RELEASES.md](RELEASES.md) then [COVERAGE_LIMITATIONS.md](COVERAGE_LIMITATIONS.md)
 
-## Core docs
+## Core Documents
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — current module/runtime architecture.
-- [ARCHITECTURE_ARDUINO_SCOPE.md](ARCHITECTURE_ARDUINO_SCOPE.md) — Arduino-only scope and near-term roadmap.
-- [PLATFORMIO_LIBRARY.md](PLATFORMIO_LIBRARY.md) — install, usage, and publish guide.
-- [EXAMPLES.md](EXAMPLES.md) — ready-to-run example sketches and pin notes.
-- [API_REFERENCE.md](API_REFERENCE.md) — practical API contract and method behavior.
-- [API_STABILITY.md](API_STABILITY.md) — compatibility guarantees, SemVer, and deprecation policy.
-- [COVERAGE_LIMITATIONS.md](COVERAGE_LIMITATIONS.md) — what native tests can/cannot cover.
-- [CONCURRENCY_MODEL.md](CONCURRENCY_MODEL.md) — ISR/loop ownership and synchronization rules.
-- [RELEASE_AUTOMATION_PLAN.md](RELEASE_AUTOMATION_PLAN.md) — tag-driven GitHub Actions publish flow.
+- [ARCHITECTURE.md](ARCHITECTURE.md) — scope, module boundaries, concurrency model, timing model, and repository layout
+- [API_REFERENCE.md](API_REFERENCE.md) — public API surface, response contracts, and stability/deprecation policy
+- [PLATFORMIO_LIBRARY.md](PLATFORMIO_LIBRARY.md) — install, packaging, publish, and registry usage notes
+- [EXAMPLES.md](EXAMPLES.md) — runnable sketches, wiring summaries, and upload notes
+- [RELEASES.md](RELEASES.md) — automated release flow, manual fallback, and verification steps
+- [COVERAGE_LIMITATIONS.md](COVERAGE_LIMITATIONS.md) — what native unit tests prove and what still requires hardware validation
 
-## Fast paths
+## Documentation Shape
 
-- New user: read `PLATFORMIO_LIBRARY.md` then `EXAMPLES.md`.
-- Contributor: read `ARCHITECTURE.md` then `COVERAGE_LIMITATIONS.md`.
-- Maintainer (release): read `RELEASE_AUTOMATION_PLAN.md`.
+The docs folder is intentionally small:
+
+- architecture and concurrency live together because they describe the same runtime model,
+- API behavior and stability policy live together because both define the public contract,
+- release automation and manual fallback live together because they are part of one release process.
+
+## Doxygen
+
+Generate the API site locally with:
+
+```bash
+doxygen Doxyfile
+```
+
+Generated output is written to `docs/doxygen/html/index.html`. The Doxygen site uses `README.md` as the landing page and includes the Markdown documents under `docs/md/` alongside the header/source API pages.

@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -69,7 +67,7 @@ jobs:
       - name: Generate coverage and enforce threshold
         env:
           COVERAGE_THRESHOLD: "90"
-          COVERAGE_FILTER: "lib/IOFusion/src|src/cmdline.cpp"
+          COVERAGE_FILTER: "lib/IOFusion/src|apps/reference_firmware/src/firmware_cli.cpp"
         run: |
           sudo apt-get update
           sudo apt-get install -y lcov

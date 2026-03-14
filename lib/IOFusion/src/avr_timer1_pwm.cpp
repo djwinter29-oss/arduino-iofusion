@@ -1,23 +1,50 @@
-// NOTE: PWM driver is AVR-specific. For native/unit-test builds we provide stubs.
+#include "avr_timer1_pwm.h"
 
-#if defined(UNIT_TEST)
-#include "pwm.h"
-#include <stdint.h>
+#if defined(__AVR__)
 
-Timer1PWM::Timer1PWM() {}
+namespace {
 
-bool Timer1PWM::begin(float freqHz) {
-  return (freqHz > 0.0f && freqHz < 1000000.0f);
+constexpr uint8_t kPwmPins[2] = {9, 10};
+
+volatile uint8_t* getPwmPortOut(uint8_t channel) {
+  if (channel > 1) return nullptr;
+  uint8_t port = digitalPinToPort(kPwmPins[channel]);
+  if (port == NOT_A_PIN) return nullptr;
+  return portOutputRegister(port);
 }
-void Timer1PWM::stop() {}
-void Timer1PWM::setDuty(uint8_t, float) {}
 
-#endif
+uint8_t getPwmMask(uint8_t channel) {
+  if (channel > 1) return 0;
+  return digitalPinToBitMask(kPwmPins[channel]);
+}
 
-#if !defined(UNIT_TEST)
-#include "pwm.h"
+void writePwmPinLevel(uint8_t channel, bool high) {
+  volatile uint8_t* portOut = getPwmPortOut(channel);
+  uint8_t mask = getPwmMask(channel);
+  if (portOut == nullptr || mask == 0) return;
+  if (high)
+    *portOut |= mask;
+  else
+    *portOut &= static_cast<uint8_t>(~mask);
+}
+
+void setCompareMode(uint8_t channel, bool enabled) {
+  if (channel == 0) {
+    TCCR1A &= static_cast<uint8_t>(~(_BV(COM1A1) | _BV(COM1A0)));
+    if (enabled) TCCR1A |= _BV(COM1A1);
+  } else if (channel == 1) {
+    TCCR1A &= static_cast<uint8_t>(~(_BV(COM1B1) | _BV(COM1B0)));
+    if (enabled) TCCR1A |= _BV(COM1B1);
+  }
+}
+
+}  // namespace
 
 Timer1PWM::Timer1PWM() {}
+
+bool Timer1PWM::begin(const Config& config) {
+  return begin(config.frequencyHz);
+}
 
 bool Timer1PWM::begin(float freqHz) {
   if (freqHz <= 0.0f) return false;
@@ -60,23 +87,18 @@ bool Timer1PWM::begin(float freqHz) {
       break;
   }
 
-  uint16_t dutyCounts[2];
-  for (uint8_t i = 0; i < 2; ++i) {
-    dutyCounts[i] = percentToCounts(_dutyPercent[i], newTop);
-  }
-
   noInterrupts();
-  pinMode(9, OUTPUT);
-  pinMode(10, OUTPUT);
+  pinMode(kPwmPins[0], OUTPUT);
+  pinMode(kPwmPins[1], OUTPUT);
 
-  // Fast PWM, TOP = ICR1 (mode 14), non-inverting on both channels.
-  TCCR1A = _BV(COM1A1) | _BV(COM1B1) | _BV(WGM11);
+  // Fast PWM, TOP = ICR1 (mode 14). Per-channel output mode is applied below.
+  TCCR1A = _BV(WGM11);
   uint8_t tccr1b = _BV(WGM13) | _BV(WGM12);
   TCCR1B = tccr1b;
 
   ICR1 = newTop;
-  _applyDuty(0, dutyCounts[0]);
-  _applyDuty(1, dutyCounts[1]);
+  _applyDuty(0, _dutyPercent[0], newTop);
+  _applyDuty(1, _dutyPercent[1], newTop);
   TCNT1 = 0;
 
   tccr1b |= newPresBits;
@@ -96,9 +118,11 @@ void Timer1PWM::stop() {
   TCCR1B = 0;
   OCR1A = 0;
   OCR1B = 0;
+  writePwmPinLevel(0, false);
+  writePwmPinLevel(1, false);
   interrupts();
-  pinMode(9, INPUT);
-  pinMode(10, INPUT);
+  pinMode(kPwmPins[0], INPUT);
+  pinMode(kPwmPins[1], INPUT);
   _top = 0;
   _presBits = 0;
   _dutyPercent[0] = 0.0f;
@@ -112,17 +136,40 @@ void Timer1PWM::setDuty(uint8_t channel, float percent) {
   if (percent > 100.0f) percent = 100.0f;
   _dutyPercent[channel] = percent;
   if (!_configured || _top == 0) return;
-  uint16_t counts = percentToCounts(percent, _top);
   noInterrupts();
-  _applyDuty(channel, counts);
+  _applyDuty(channel, percent, _top);
   interrupts();
 }
 
-void Timer1PWM::_applyDuty(uint8_t channel, uint16_t value) {
+void Timer1PWM::_applyDuty(uint8_t channel, float percent, uint16_t top) {
+  if (channel > 1) return;
+
+  if (percent <= 0.0f) {
+    setCompareMode(channel, false);
+    if (channel == 0)
+      OCR1A = 0;
+    else
+      OCR1B = 0;
+    writePwmPinLevel(channel, false);
+    return;
+  }
+
+  if (percent >= 100.0f) {
+    setCompareMode(channel, false);
+    if (channel == 0)
+      OCR1A = top;
+    else
+      OCR1B = top;
+    writePwmPinLevel(channel, true);
+    return;
+  }
+
+  uint16_t value = percentToCounts(percent, top);
   if (channel == 0)
     OCR1A = value;
-  else if (channel == 1)
+  else
     OCR1B = value;
+  setCompareMode(channel, true);
 }
 
 uint16_t Timer1PWM::percentToCounts(float percent, uint16_t top) const {
@@ -133,4 +180,4 @@ uint16_t Timer1PWM::percentToCounts(float percent, uint16_t top) const {
   if (v > top) v = top;
   return (uint16_t)v;
 }
-#endif  // !UNIT_TEST
+#endif  // __AVR__
