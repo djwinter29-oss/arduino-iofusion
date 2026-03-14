@@ -17,6 +17,7 @@ on:
 env:
   PLATFORMIO_OWNER: djwinter29
   PLATFORMIO_PACKAGE: IOFusion
+  PDF_ASSET_BASENAME: IOFusion-reference
 
 concurrency:
   group: release-publish-${{ github.ref }}
@@ -117,7 +118,23 @@ jobs:
           echo "Updated library.json:"
           cat library.json
 
-      - name: Login to PlatformIO
+      - name: Install doxygen PDF deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz texlive-latex-base texlive-latex-recommended texlive-latex-extra latexmk ghostscript
+
+      - name: Build doxygen PDF
+        run: |
+          mkdir -p docs/doxygen
+          doxygen --version
+          doxygen Doxyfile
+          cd docs/doxygen/latex
+          latexmk -pdf -interaction=nonstopmode -halt-on-error refman.tex
+          PDF_ASSET_NAME="${PDF_ASSET_BASENAME}-${{ needs.resolve-release.outputs.release_version }}.pdf"
+          cp refman.pdf "/tmp/${PDF_ASSET_NAME}"
+          echo "Built PDF asset: /tmp/${PDF_ASSET_NAME}"
+
+      - name: Validate PlatformIO auth token
         env:
           PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
         run: |
@@ -125,7 +142,6 @@ jobs:
             echo "Missing required secret: PLATFORMIO_AUTH_TOKEN" >&2
             exit 1
           fi
-          pio account login --token "${PLATFORMIO_AUTH_TOKEN}"
           pio account show
 
       - name: Dry-run package pack
@@ -148,6 +164,7 @@ jobs:
           VERSION="${{ needs.resolve-release.outputs.release_version }}"
           REGISTRY_URL="https://registry.platformio.org/libraries/${PLATFORMIO_OWNER}/${PLATFORMIO_PACKAGE}"
           INSTALL_SNIPPET=$(printf 'lib_deps =\n  %s/%s@%s' "${PLATFORMIO_OWNER}" "${PLATFORMIO_PACKAGE}" "${VERSION}")
+          PDF_ASSET_NAME="${PDF_ASSET_BASENAME}-${VERSION}.pdf"
           CODE_FENCE='```'
 
           EXTRA_NOTES=$(cat <<EOF
@@ -155,6 +172,7 @@ jobs:
           ## PlatformIO
           - Registry: ${REGISTRY_URL}
           - Version: ${VERSION}
+          - PDF: attached to this release as ${PDF_ASSET_NAME}
 
           ### Install
           ${CODE_FENCE}ini
@@ -175,3 +193,12 @@ jobs:
             gh release create "${TAG}" --title "${TAG}" --notes "${EXTRA_NOTES#\n}"
             echo "Created release for ${TAG}."
           fi
+
+      - name: Upload Doxygen PDF to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ needs.resolve-release.outputs.release_tag }}"
+          VERSION="${{ needs.resolve-release.outputs.release_version }}"
+          PDF_ASSET_NAME="${PDF_ASSET_BASENAME}-${VERSION}.pdf"
+          gh release upload "${TAG}" "/tmp/${PDF_ASSET_NAME}#${PDF_ASSET_NAME}" --clobber
