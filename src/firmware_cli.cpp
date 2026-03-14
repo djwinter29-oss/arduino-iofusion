@@ -1,4 +1,4 @@
-#include "cmdline.h"
+#include "firmware_cli.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -94,11 +94,12 @@ bool handlePwmDuty(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
 
 }  // namespace
 
-CmdLine::CmdLine(AnalogSampler& analog, DigiIn& digi, EncoderGenerator& encoder, Timer1PWM& pwm,
-                 const uint8_t* analogPins, uint8_t analogCount, const uint8_t* digitalPins,
-                 uint8_t digitalCount)
+FirmwareCli::FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor,
+                         EncoderGenerator& encoder, Timer1PWM& pwm,
+                         const uint8_t* analogPins, uint8_t analogCount,
+                         const uint8_t* digitalPins, uint8_t digitalCount)
     : _analog(analog),
-      _digi(digi),
+      _digitalMonitor(digitalMonitor),
       _encoder(encoder),
       _pwm(pwm),
       _analogPins(analogPins),
@@ -106,7 +107,7 @@ CmdLine::CmdLine(AnalogSampler& analog, DigiIn& digi, EncoderGenerator& encoder,
       _digitalPins(digitalPins),
       _digitalCount(digitalCount) {}
 
-void CmdLine::respondAnalog() {
+void FirmwareCli::respondAnalog() {
   Serial.print(F("{"));
   for (uint8_t i = 0; i < _analogCount; ++i) {
     Serial.print(F("\"a"));
@@ -118,22 +119,22 @@ void CmdLine::respondAnalog() {
   Serial.println(F("}"));
 }
 
-void CmdLine::respondDigital() {
+void FirmwareCli::respondDigital() {
   Serial.print(F("{"));
   for (uint8_t i = 0; i < _digitalCount; ++i) {
     Serial.print(F("\"d"));
     Serial.print(_digitalPins[i]);
     Serial.print(F("\":{\"freq\":"));
-    Serial.print(_digi.getFrequency(i), 1);
+    Serial.print(_digitalMonitor.getFrequency(i), 1);
     Serial.print(F(",\"duty\":"));
-    Serial.print(_digi.getDutyCycle(i), 1);
+    Serial.print(_digitalMonitor.getDutyCycle(i), 1);
     Serial.print(F("}"));
     if (i + 1 < _digitalCount) Serial.print(F(","));
   }
   Serial.println(F("}"));
 }
 
-void CmdLine::respondEncoder() {
+void FirmwareCli::respondEncoder() {
   Serial.print(F("{\"encoder\":{\"direction\":\""));
   Serial.print(_encoder.getDirection() ? F("UP") : F("DOWN"));
   Serial.print(F("\",\"position\":"));
@@ -141,7 +142,7 @@ void CmdLine::respondEncoder() {
   Serial.println(F("}}"));
 }
 
-void CmdLine::handleCommand(char* cmd) {
+void FirmwareCli::handleCommand(char* cmd) {
   while (*cmd && isspace(static_cast<unsigned char>(*cmd))) ++cmd;
   if (*cmd == '\0') return;
 
@@ -191,7 +192,7 @@ void CmdLine::handleCommand(char* cmd) {
   printError(F("unknown command"));
 }
 
-void CmdLine::dispatchCommand() {
+void FirmwareCli::dispatchCommand() {
   if (_cmdLength == 0) return;
   _cmdBuffer[_cmdLength] = '\0';
   handleCommand(_cmdBuffer);
@@ -199,7 +200,7 @@ void CmdLine::dispatchCommand() {
   _cmdBuffer[0] = '\0';
 }
 
-void CmdLine::processSerial() {
+void FirmwareCli::processSerial() {
   while (Serial.available() > 0) {
     char c = static_cast<char>(Serial.read());
     if (c == '\r' || c == '\n') {

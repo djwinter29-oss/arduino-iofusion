@@ -5,11 +5,11 @@ This file lists quick-start examples included in this repository.
 ## Available sketches
 
 - `examples/basic_usage/basic_usage.ino`
-  - Minimal initialization of AnalogSampler, DigiIn, EncoderGenerator, and Timer1PWM.
+  - Minimal initialization of AnalogSampler, DigitalInputMonitor, EncoderGenerator, and Timer1PWM.
   - Expected serial: periodic status/JSON-style output after setup.
 
 - `examples/frequency_monitor/frequency_monitor.ino`
-  - Measures digital frequency/duty using `DigiIn` + `Timer2Driver` ISR tick.
+  - Measures digital frequency/duty using `DigitalInputMonitor` + `Timer2Driver` ISR tick.
   - Expected serial: JSON lines like `{\"d2\":{\"freq\":... ,\"duty\":...},\"d3\":...}`.
   - Measurement model: sampled estimator, best suited to signals well below the sampling Nyquist limit.
 
@@ -53,7 +53,7 @@ pio device monitor -b 115200
 
 - `frequency_monitor` and `encoder_signal_generator` use input pins configured as `INPUT_PULLUP`.
 - For deterministic results, avoid heavy blocking work in `loop()`.
-- For high-frequency or narrow-pulse measurements, prefer hardware capture or dedicated edge interrupts over `DigiIn`.
+- For high-frequency or narrow-pulse measurements, prefer hardware capture or dedicated edge interrupts over `DigitalInputMonitor`.
 
 ## Troubleshooting (quick)
 

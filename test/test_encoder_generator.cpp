@@ -1,9 +1,9 @@
 #include <unity.h>
 
-#include "encoder.h"
+#include "encoder_generator.h"
 #include "test_support.h"
 
-void test_encoder_branches() {
+void test_encoder_generator_branches() {
   EncoderGenerator enc;
   TEST_ASSERT_FALSE(enc.begin(9, 9, 2, 3));
   TEST_ASSERT_TRUE(enc.begin(9, 10, 2, 3));

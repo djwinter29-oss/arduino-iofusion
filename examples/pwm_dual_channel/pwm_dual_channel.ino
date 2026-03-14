@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "pwm.h"
+#include "avr_timer1_pwm.h"
 
 namespace {
 Timer1PWM pwm;

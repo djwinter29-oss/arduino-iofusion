@@ -1,4 +1,4 @@
-#include "digiin.h"
+#include "digital_input_monitor.h"
 
 namespace {
 
@@ -8,10 +8,10 @@ inline uint8_t readPinState(volatile uint8_t* portIn, uint8_t mask) {
 
 }  // namespace
 
-DigiIn::DigiIn() {}
+DigitalInputMonitor::DigitalInputMonitor() {}
 
-bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, float tickHz,
-                   bool usePullup) {
+bool DigitalInputMonitor::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks,
+                                float tickHz, bool usePullup) {
   if (count == 0 || count > MAX_PINS) return false;
   if (windowTicks == 0 || tickHz <= 0.0f) return false;
   _pinCount = count;
@@ -38,13 +38,11 @@ bool DigiIn::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks, flo
   return true;
 }
 
-void DigiIn::onTick() {
-  // ISR-owned counters/flags update (consumed in updateIfReady())
+void DigitalInputMonitor::onTick() {
   if (_windowReady) return;
   for (uint8_t i = 0; i < _pinCount; ++i) {
     uint8_t s = readPinState(_pinPortIn[i], _pinMask[i]);
     if (s) _highCnt[i]++;
-    // detect rising edge
     if (s && !_lastState[i]) _edgeCnt[i]++;
     _lastState[i] = s;
   }
@@ -54,7 +52,7 @@ void DigiIn::onTick() {
   }
 }
 
-void DigiIn::updateIfReady() {
+void DigitalInputMonitor::updateIfReady() {
   if (!_windowReady) return;
 
   uint16_t samples = 0;
@@ -88,11 +86,11 @@ void DigiIn::updateIfReady() {
   }
 }
 
-uint8_t DigiIn::getPinCount() const {
+uint8_t DigitalInputMonitor::getPinCount() const {
   return _pinCount;
 }
 
-float DigiIn::getFrequency(uint8_t idx) const {
+float DigitalInputMonitor::getFrequency(uint8_t idx) const {
   if (idx >= _pinCount) return 0.0f;
   noInterrupts();
   float v = _freq[idx];
@@ -100,7 +98,7 @@ float DigiIn::getFrequency(uint8_t idx) const {
   return v;
 }
 
-float DigiIn::getDutyCycle(uint8_t idx) const {
+float DigitalInputMonitor::getDutyCycle(uint8_t idx) const {
   if (idx >= _pinCount) return 0.0f;
   noInterrupts();
   float v = _duty[idx];

@@ -41,22 +41,22 @@ IOFusion is a small set of hardware helpers focused on deterministic, timer-driv
 
 - `Timer2Driver` provides a periodic ISR tick for scheduling fast tasks.
 - `AnalogSampler` defers ADC reads to `loop()` while the ISR only sets a flag.
-- `DigiIn` samples digital inputs in the ISR and computes frequency/duty in `loop()`.
+- `DigitalInputMonitor` samples digital inputs in the ISR and computes frequency/duty in `loop()`.
 - `EncoderGenerator` produces a quadrature output and tracks position/direction.
 - `Timer1PWM` configures Timer1 PWM on OC1A/OC1B (pins 9/10).
 
-#### DigiIn measurement limits
+#### DigitalInputMonitor measurement limits
 
-`DigiIn` is a sampled digital estimator, not a hardware input-capture peripheral. It observes each pin once per timer tick, counts sampled HIGH time, and counts sampled rising edges over a fixed window. That has a few direct consequences:
+`DigitalInputMonitor` is a sampled digital estimator, not a hardware input-capture peripheral. It observes each pin once per timer tick, counts sampled HIGH time, and counts sampled rising edges over a fixed window. That has a few direct consequences:
 
 - Pulses narrower than one tick can be missed entirely.
 - If the signal toggles faster than half the tick rate, aliasing is unavoidable.
 - Frequency resolution is one counted edge per window: $\Delta f = \frac{\text{tickHz}}{\text{windowTicks}}$.
 - Duty-cycle resolution is one sample per window: $\Delta duty \approx \frac{100}{\text{windowTicks}}\%$.
 
-For reliable square-wave style measurements, keep the input frequency comfortably below Nyquist; as a practical rule, target $f_{in} \le \frac{\text{tickHz}}{4}$ if both duty and edge count matter. For higher-frequency or narrow-pulse measurements, use hardware capture or edge interrupts instead of `DigiIn`.
+For reliable square-wave style measurements, keep the input frequency comfortably below Nyquist; as a practical rule, target $f_{in} \le \frac{\text{tickHz}}{4}$ if both duty and edge count matter. For higher-frequency or narrow-pulse measurements, use hardware capture or edge interrupts instead of `DigitalInputMonitor`.
 
-In the default firmware configuration, `DigiIn` runs at 10 kHz with a 500-tick window ([src/main.cpp](src/main.cpp)). That yields a 50 ms measurement window, about 20 Hz frequency resolution, and about 0.2% duty resolution, with best results on signals well below 2.5 kHz.
+In the default firmware configuration, `DigitalInputMonitor` runs at 10 kHz with a 500-tick window ([src/main.cpp](src/main.cpp)). That yields a 50 ms measurement window, about 20 Hz frequency resolution, and about 0.2% duty resolution, with best results on signals well below 2.5 kHz.
 
 ### Encoder generator semantics
 
@@ -68,7 +68,7 @@ In the default firmware configuration, `DigiIn` runs at 10 kHz with a 500-tick w
 ```mermaid
 flowchart TD
     T2[Timer2Driver ISR] --> AS[AnalogSampler flag]
-    T2 --> DI[DigiIn counters]
+    T2 --> DI[DigitalInputMonitor counters]
     T2 --> EN[EncoderGenerator state]
 
     LOOP[loop] --> AS
@@ -93,7 +93,7 @@ flowchart TD
 
 To keep measurements accurate, `loop()` should run frequently. If the loop stalls for long periods, analog sampling and digital window updates will lag. As a rule of thumb, keep worst-case loop latency well below the digital measurement window duration.
 
-For `DigiIn`, also size `tickHz` and `windowTicks` around the actual signal envelope you need to observe. A larger window improves stability and resolution but increases latency; a faster tick improves observability but increases ISR load.
+For `DigitalInputMonitor`, also size `tickHz` and `windowTicks` around the actual signal envelope you need to observe. A larger window improves stability and resolution but increases latency; a faster tick improves observability but increases ISR load.
 
 #### Analog reference voltage
 
@@ -104,7 +104,7 @@ For `DigiIn`, also size `tickHz` and `windowTicks` around the actual signal enve
 - Library headers: [lib/IOFusion/include](lib/IOFusion/include)
 - Library sources: [lib/IOFusion/src](lib/IOFusion/src)
 - Firmware entry: [src/main.cpp](src/main.cpp)
-- Command line interface: [src/cmdline.h](src/cmdline.h) and [src/cmdline.cpp](src/cmdline.cpp)
+- Command line interface: [src/firmware_cli.h](src/firmware_cli.h) and [src/firmware_cli.cpp](src/firmware_cli.cpp)
 
 ## Command line interface
 

@@ -28,7 +28,7 @@ This document defines ownership and synchronization rules for shared state.
   - `begin()` resets `_sampleRequested` in a critical section.
   - `sampleIfDue()` clears `_sampleRequested` in a critical section before ADC work.
 
-### `DigiIn`
+### `DigitalInputMonitor`
 
 - **ISR-owned writes**: `_samplesInWindow`, `_edgeCnt[]`, `_highCnt[]`, `_lastState[]`, `_windowReady`.
 - **loop-owned writes**: `_freq[]`, `_duty[]` (after snapshot copy).

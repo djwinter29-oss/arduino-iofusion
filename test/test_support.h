@@ -4,7 +4,7 @@
 #include <cstdint>
 
 #include "Arduino.h"
-#include "cmdline.h"
+#include "firmware_cli.h"
 
 extern volatile uint8_t gTimerCallbackCountA;
 extern volatile uint8_t gTimerCallbackCountB;
@@ -21,12 +21,13 @@ void timerCallbackE();
 void setDigitalPin(uint8_t pin, bool high);
 void clearPorts();
 void resetTestState();
-void runCmd(CmdLine& cli, const char* cmd);
+void runCmd(FirmwareCli& cli, const char* cmd);
 
 void test_analog_sampler_branches();
-void test_digiin_branches();
-void test_encoder_branches();
-void test_cmdline_commands();
-void test_timer_and_pwm_stubs();
+void test_avr_timer1_pwm_stubs();
+void test_avr_timer2_driver_stubs();
+void test_digital_input_monitor_branches();
+void test_encoder_generator_branches();
+void test_firmware_cli_commands();
 
 #endif

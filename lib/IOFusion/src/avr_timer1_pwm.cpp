@@ -1,7 +1,7 @@
 // NOTE: PWM driver is AVR-specific. For native/unit-test builds we provide stubs.
 
 #if defined(UNIT_TEST)
-#include "pwm.h"
+#include "avr_timer1_pwm.h"
 #include <stdint.h>
 
 Timer1PWM::Timer1PWM() {}
@@ -15,7 +15,7 @@ void Timer1PWM::setDuty(uint8_t, float) {}
 #endif
 
 #if !defined(UNIT_TEST)
-#include "pwm.h"
+#include "avr_timer1_pwm.h"
 
 namespace {
 

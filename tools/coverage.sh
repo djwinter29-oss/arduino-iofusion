@@ -3,7 +3,7 @@ set -euo pipefail
 
 OUTPUT_DIR=${1:-coverage}
 COVERAGE_THRESHOLD=${COVERAGE_THRESHOLD:-90}
-COVERAGE_FILTER=${COVERAGE_FILTER:-lib/IOFusion/src|src/cmdline.cpp}
+COVERAGE_FILTER=${COVERAGE_FILTER:-lib/IOFusion/src|src/firmware_cli.cpp}
 
 if ! command -v pio >/dev/null 2>&1; then
   echo "PlatformIO (pio) not found in PATH." >&2

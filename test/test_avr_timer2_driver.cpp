@@ -1,22 +1,21 @@
 #include <unity.h>
 
-#include "pwm.h"
-#include "timer.h"
+#include "avr_timer2_driver.h"
 #include "test_support.h"
 
-void test_timer_and_pwm_stubs() {
-  Timer2Driver t;
+void test_avr_timer2_driver_stubs() {
+  Timer2Driver timer;
   Timer2Driver other;
 
-  TEST_ASSERT_EQUAL_UINT16(0, t.beginHz(0.0f));
-  TEST_ASSERT_EQUAL_UINT16(1, t.beginHz(1000.0f));
-  TEST_ASSERT_FALSE(t.attachCallback(nullptr));
-  TEST_ASSERT_TRUE(t.attachCallback(timerCallbackA));
-  TEST_ASSERT_FALSE(t.attachCallback(timerCallbackA));
-  TEST_ASSERT_TRUE(t.attachCallback(timerCallbackB));
-  TEST_ASSERT_TRUE(t.attachCallback(timerCallbackC));
-  TEST_ASSERT_TRUE(t.attachCallback(timerCallbackD));
-  TEST_ASSERT_FALSE(t.attachCallback(timerCallbackE));
+  TEST_ASSERT_EQUAL_UINT16(0, timer.beginHz(0.0f));
+  TEST_ASSERT_EQUAL_UINT16(1, timer.beginHz(1000.0f));
+  TEST_ASSERT_FALSE(timer.attachCallback(nullptr));
+  TEST_ASSERT_TRUE(timer.attachCallback(timerCallbackA));
+  TEST_ASSERT_FALSE(timer.attachCallback(timerCallbackA));
+  TEST_ASSERT_TRUE(timer.attachCallback(timerCallbackB));
+  TEST_ASSERT_TRUE(timer.attachCallback(timerCallbackC));
+  TEST_ASSERT_TRUE(timer.attachCallback(timerCallbackD));
+  TEST_ASSERT_FALSE(timer.attachCallback(timerCallbackE));
 
   Timer2Driver::handleInterrupt();
   TEST_ASSERT_EQUAL_UINT8(1, gTimerCallbackCountA);
@@ -27,8 +26,8 @@ void test_timer_and_pwm_stubs() {
 
   TEST_ASSERT_FALSE(other.beginHz(1000.0f));
   TEST_ASSERT_FALSE(other.attachCallback(timerCallbackE));
-  TEST_ASSERT_TRUE(t.detachCallback(timerCallbackC));
-  TEST_ASSERT_FALSE(t.detachCallback(timerCallbackC));
+  TEST_ASSERT_TRUE(timer.detachCallback(timerCallbackC));
+  TEST_ASSERT_FALSE(timer.detachCallback(timerCallbackC));
 
   Timer2Driver::handleInterrupt();
   TEST_ASSERT_EQUAL_UINT8(2, gTimerCallbackCountA);
@@ -36,21 +35,15 @@ void test_timer_and_pwm_stubs() {
   TEST_ASSERT_EQUAL_UINT8(1, gTimerCallbackCountC);
   TEST_ASSERT_EQUAL_UINT8(2, gTimerCallbackCountD);
 
-  t.stop();
+  timer.stop();
   Timer2Driver::handleInterrupt();
   TEST_ASSERT_EQUAL_UINT8(2, gTimerCallbackCountA);
-  TEST_ASSERT_FALSE(t.attachCallback(timerCallbackA));
+  TEST_ASSERT_FALSE(timer.attachCallback(timerCallbackA));
 
-  TEST_ASSERT_EQUAL_UINT16(1, t.beginHz(1000.0f));
+  TEST_ASSERT_EQUAL_UINT16(1, timer.beginHz(1000.0f));
   Timer2Driver::handleInterrupt();
   TEST_ASSERT_EQUAL_UINT8(2, gTimerCallbackCountA);
-  TEST_ASSERT_TRUE(t.attachCallback(timerCallbackA));
+  TEST_ASSERT_TRUE(timer.attachCallback(timerCallbackA));
   Timer2Driver::handleInterrupt();
   TEST_ASSERT_EQUAL_UINT8(3, gTimerCallbackCountA);
-
-  Timer1PWM p;
-  TEST_ASSERT_TRUE(p.begin(500.0f));
-  p.setDuty(0, -1.0f);
-  p.setDuty(1, 120.0f);
-  p.stop();
 }

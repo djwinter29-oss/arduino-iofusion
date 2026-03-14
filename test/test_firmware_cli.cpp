@@ -2,26 +2,26 @@
 
 #include <unity.h>
 
-#include "analog.h"
-#include "cmdline.h"
-#include "digiin.h"
-#include "encoder.h"
-#include "pwm.h"
+#include "analog_sampler.h"
+#include "avr_timer1_pwm.h"
+#include "digital_input_monitor.h"
+#include "encoder_generator.h"
+#include "firmware_cli.h"
 #include "test_support.h"
 
-void test_cmdline_commands() {
+void test_firmware_cli_commands() {
   AnalogSampler analog;
-  DigiIn digi;
+  DigitalInputMonitor digitalMonitor;
   EncoderGenerator encoder;
   Timer1PWM pwm;
 
   const uint8_t aPins[] = {0};
   const uint8_t dPins[] = {2};
   TEST_ASSERT_TRUE(analog.begin(aPins, 1));
-  TEST_ASSERT_TRUE(digi.begin(dPins, 1, 4, 1000.0f, false));
+  TEST_ASSERT_TRUE(digitalMonitor.begin(dPins, 1, 4, 1000.0f, false));
   TEST_ASSERT_TRUE(encoder.begin(9, 10, 2, 3));
 
-  CmdLine cli(analog, digi, encoder, pwm, aPins, 1, dPins, 1);
+  FirmwareCli cli(analog, digitalMonitor, encoder, pwm, aPins, 1, dPins, 1);
 
   runCmd(cli, "help");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "help"));

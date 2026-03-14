@@ -1,6 +1,6 @@
 // Timer1-based PWM driver for two hardware channels (OC1A / OC1B)
-#ifndef IOFUSION_PWM_H
-#define IOFUSION_PWM_H
+#ifndef IOFUSION_AVR_TIMER1_PWM_H
+#define IOFUSION_AVR_TIMER1_PWM_H
 
 #include <Arduino.h>
 
@@ -25,4 +25,4 @@ class Timer1PWM {
   void _applyDuty(uint8_t channel, float percent, uint16_t top);
 };
 
-#endif  // IOFUSION_PWM_H
+#endif  // IOFUSION_AVR_TIMER1_PWM_H

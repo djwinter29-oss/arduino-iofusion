@@ -1,6 +1,6 @@
 // Simple analog sampler for AVR/Arduino
-#ifndef IOFUSION_ANALOG_H
-#define IOFUSION_ANALOG_H
+#ifndef IOFUSION_ANALOG_SAMPLER_H
+#define IOFUSION_ANALOG_SAMPLER_H
 
 #include <Arduino.h>
 
@@ -31,4 +31,4 @@ class AnalogSampler {
   float _vref = 5.0f;
 };
 
-#endif  // IOFUSION_ANALOG_H
+#endif  // IOFUSION_ANALOG_SAMPLER_H

@@ -5,7 +5,7 @@ This folder contains runnable sketches for Arduino Uno-class targets.
 ## 1) `basic_usage/basic_usage.ino`
 
 **When to use**
-- Quick smoke test for all major modules together (`AnalogSampler`, `DigiIn`, `EncoderGenerator`, `Timer1PWM`).
+- Quick smoke test for all major modules together (`AnalogSampler`, `DigitalInputMonitor`, `EncoderGenerator`, `Timer1PWM`).
 
 **Wiring summary**
 - Analog inputs: `A0`, `A1`

@@ -17,38 +17,38 @@ This design helps keep interrupt latency low and behavior predictable.
 
 ## 2) Module Overview
 
-### Timer2Driver (`lib/IOFusion/include/timer.h`, `lib/IOFusion/src/timer.cpp`)
+### Timer2Driver (`lib/IOFusion/include/avr_timer2_driver.h`, `lib/IOFusion/src/avr_timer2_driver.cpp`)
 
 - Configures Timer2 at a requested tick rate.
 - Dispatches registered callbacks from ISR context.
 - Used as the heartbeat for periodic sampling / state stepping.
 
-### AnalogSampler (`lib/IOFusion/include/analog.h`, `lib/IOFusion/src/analog.cpp`)
+### AnalogSampler (`lib/IOFusion/include/analog_sampler.h`, `lib/IOFusion/src/analog_sampler.cpp`)
 
 - Tracks configured analog channels.
 - `onTick()` marks sampling due.
 - `sampleIfDue()` performs ADC reads in main context.
 - Converts raw ADC to voltage using configurable `Vref`.
 
-### DigiIn (`lib/IOFusion/include/digiin.h`, `lib/IOFusion/src/digiin.cpp`)
+### DigitalInputMonitor (`lib/IOFusion/include/digital_input_monitor.h`, `lib/IOFusion/src/digital_input_monitor.cpp`)
 
 - Samples digital pin states each tick.
 - Accumulates edge/high counts over a time window.
 - `updateIfReady()` computes frequency and duty cycle in main context.
 - This is a sampled estimator, not a hardware input-capture block.
 
-### EncoderGenerator (`lib/IOFusion/include/encoder.h`, `lib/IOFusion/src/encoder.cpp`)
+### EncoderGenerator (`lib/IOFusion/include/encoder_generator.h`, `lib/IOFusion/src/encoder_generator.cpp`)
 
 - **Generates** quadrature A/B output patterns.
 - Uses `up/down` input pins as direction control.
 - Maintains logical position and direction state.
 
-### Timer1PWM (`lib/IOFusion/include/pwm.h`, `lib/IOFusion/src/pwm.cpp`)
+### Timer1PWM (`lib/IOFusion/include/avr_timer1_pwm.h`, `lib/IOFusion/src/avr_timer1_pwm.cpp`)
 
 - Configures Timer1 PWM output (Uno OC1A/OC1B, pins 9/10).
 - Controls output frequency and per-channel duty cycle.
 
-### CmdLine + app wiring (`src/cmdline.*`, `src/main.cpp`)
+### FirmwareCli + app wiring (`src/firmware_cli.*`, `src/main.cpp`)
 
 - Integrates all modules into a serial-controlled firmware.
 - Provides text commands for query/control.
@@ -60,11 +60,11 @@ This design helps keep interrupt latency low and behavior predictable.
 1. `Timer2Driver` ISR fires at fixed interval.
 2. ISR callbacks run short handlers:
    - `AnalogSampler::onTick()`
-   - `DigiIn::onTick()`
+  - `DigitalInputMonitor::onTick()`
    - `EncoderGenerator::onTick()`
 3. `loop()` performs deferred work:
    - `AnalogSampler::sampleIfDue()`
-   - `DigiIn::updateIfReady()`
+  - `DigitalInputMonitor::updateIfReady()`
    - command parsing and responses
 
 This flow preserves deterministic sampling while avoiding expensive ISR operations.
@@ -77,9 +77,9 @@ This flow preserves deterministic sampling while avoiding expensive ISR operatio
 - Keep `loop()` responsive; long blocking code will delay deferred calculations.
 - Choose digital measurement windows (`windowTicks`) based on required response speed vs. stability.
 
-### DigiIn envelope and aliasing limits
+### DigitalInputMonitor Envelope And Aliasing Limits
 
-`DigiIn` measures digital signals by sampling them once per timer tick. It does not timestamp edges in hardware. That means:
+`DigitalInputMonitor` measures digital signals by sampling them once per timer tick. It does not timestamp edges in hardware. That means:
 
 - transitions faster than $\frac{\text{tickHz}}{2}$ alias,
 - narrow pulses shorter than one tick may be missed,

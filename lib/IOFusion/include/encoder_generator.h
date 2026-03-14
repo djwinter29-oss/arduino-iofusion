@@ -1,6 +1,6 @@
 // Simple quadrature encoder signal generator
-#ifndef IOFUSION_ENCODER_H
-#define IOFUSION_ENCODER_H
+#ifndef IOFUSION_ENCODER_GENERATOR_H
+#define IOFUSION_ENCODER_GENERATOR_H
 
 #include <Arduino.h>
 
@@ -40,4 +40,4 @@ class EncoderGenerator {
 
 // No global instance here — create an instance in your `main.cpp` as needed.
 
-#endif  // IOFUSION_ENCODER_H
+#endif  // IOFUSION_ENCODER_GENERATOR_H

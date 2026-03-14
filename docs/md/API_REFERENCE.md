@@ -18,7 +18,7 @@ This document describes the current public API contract for IOFusion.
 
 ## `AnalogSampler`
 
-Header: `lib/IOFusion/include/analog.h`
+Header: `lib/IOFusion/include/analog_sampler.h`
 
 ### Methods
 
@@ -43,16 +43,16 @@ Header: `lib/IOFusion/include/analog.h`
 
 ---
 
-## `DigiIn`
+## `DigitalInputMonitor`
 
-Header: `lib/IOFusion/include/digiin.h`
+Header: `lib/IOFusion/include/digital_input_monitor.h`
 
 ### Methods
 
 - `bool begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks=1000, float tickHz=1000.0f, bool usePullup=false)`
   - Initializes digital monitoring.
   - Returns `false` on invalid arguments or pin mapping failure.
-  - `DigiIn` is a sampled estimator: pulses shorter than one tick may be missed, and input frequencies above $\frac{\text{tickHz}}{2}$ alias.
+  - `DigitalInputMonitor` is a sampled estimator: pulses shorter than one tick may be missed, and input frequencies above $\frac{\text{tickHz}}{2}$ alias.
   - Frequency resolution is $\frac{\text{tickHz}}{\text{windowTicks}}$ Hz.
   - Duty resolution is approximately $\frac{100}{\text{windowTicks}}\%$.
   - For robust frequency and duty measurements, keep the input comfortably below Nyquist; a practical target is $f_{in} \le \frac{\text{tickHz}}{4}$.
@@ -72,7 +72,7 @@ Header: `lib/IOFusion/include/digiin.h`
 
 ## `EncoderGenerator`
 
-Header: `lib/IOFusion/include/encoder.h`
+Header: `lib/IOFusion/include/encoder_generator.h`
 
 ### Methods
 
@@ -95,7 +95,7 @@ Header: `lib/IOFusion/include/encoder.h`
 
 ## `Timer1PWM`
 
-Header: `lib/IOFusion/include/pwm.h`
+Header: `lib/IOFusion/include/avr_timer1_pwm.h`
 
 ### Methods
 
@@ -114,7 +114,7 @@ Header: `lib/IOFusion/include/pwm.h`
 
 ## `Timer2Driver`
 
-Header: `lib/IOFusion/include/timer.h`
+Header: `lib/IOFusion/include/avr_timer2_driver.h`
 
 ### Methods
 
@@ -132,9 +132,9 @@ Header: `lib/IOFusion/include/timer.h`
 
 ---
 
-## `CmdLine` command surface (firmware serial)
+## `FirmwareCli` command surface (firmware serial)
 
-Source: `src/cmdline.cpp`
+Source: `src/firmware_cli.cpp`
 
 Supported commands (case-insensitive command token):
 

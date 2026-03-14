@@ -1,4 +1,4 @@
-#include "analog.h"
+#include "analog_sampler.h"
 
 AnalogSampler::AnalogSampler() {
   for (uint8_t i = 0; i < MAX_CHANNELS; ++i) _lastValues[i] = 0;

@@ -1,11 +1,11 @@
 #include <Arduino.h>
 
-#include "analog.h"
-#include "cmdline.h"
-#include "digiin.h"
-#include "encoder.h"
-#include "pwm.h"
-#include "timer.h"
+#include "analog_sampler.h"
+#include "avr_timer1_pwm.h"
+#include "avr_timer2_driver.h"
+#include "digital_input_monitor.h"
+#include "encoder_generator.h"
+#include "firmware_cli.h"
 #include "version_info.h"
 
 namespace {
@@ -13,12 +13,12 @@ constexpr float kTimerTickHz = 10000.0f;  // Timer2 tick frequency
 
 Timer2Driver timer2;
 AnalogSampler analogSampler;
-DigiIn digiIn;
+DigitalInputMonitor digitalInputMonitor;
 EncoderGenerator encoder;
 Timer1PWM pwm;
 
 volatile bool analogOk = false;
-volatile bool digiOk = false;
+volatile bool digitalMonitorOk = false;
 volatile bool encoderOk = false;
 bool pwmOk = false;
 bool timerOk = false;
@@ -27,18 +27,19 @@ const uint8_t kAnalogPins[] = {0, 1, 2, 3, 4, 5};
 const uint8_t kDigitalPins[] = {2, 3, 8, 11, 12, 13};
 // pwm 9,10
 
-CmdLine cmdLine(analogSampler, digiIn, encoder, pwm, kAnalogPins,
-                static_cast<uint8_t>(sizeof(kAnalogPins) / sizeof(kAnalogPins[0])), kDigitalPins,
-                static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])));
+FirmwareCli firmwareCli(analogSampler, digitalInputMonitor, encoder, pwm, kAnalogPins,
+                        static_cast<uint8_t>(sizeof(kAnalogPins) / sizeof(kAnalogPins[0])),
+                        kDigitalPins,
+                        static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])));
 
 void timerTickHandler() {
   if (analogOk) analogSampler.onTick();
-  if (digiOk) digiIn.onTick();
+  if (digitalMonitorOk) digitalInputMonitor.onTick();
   if (encoderOk) encoder.onTick();
 }
 
 void processSerial() {
-  cmdLine.processSerial();
+  firmwareCli.processSerial();
 }
 }  // namespace
 
@@ -55,10 +56,10 @@ void setup() {
   analogOk = analogSampler.getChannelCount() > 0;
   if (!analogOk) Serial.println(F("{\"error\":\"analog init failed\"}"));
 
-  digiOk = digiIn.begin(kDigitalPins,
-                        static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])), 500,
-                        kTimerTickHz, true);
-  if (!digiOk) Serial.println(F("{\"error\":\"digital init failed\"}"));
+  digitalMonitorOk = digitalInputMonitor.begin(
+      kDigitalPins, static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])), 500,
+      kTimerTickHz, true);
+  if (!digitalMonitorOk) Serial.println(F("{\"error\":\"digital init failed\"}"));
 
   encoderOk = encoder.begin(4, 5, 6, 7, true, false);
   if (!encoderOk) Serial.println(F("{\"error\":\"encoder init failed\"}"));
@@ -81,6 +82,6 @@ void setup() {
 
 void loop() {
   if (analogOk) analogSampler.sampleIfDue();
-  if (digiOk) digiIn.updateIfReady();
+  if (digitalMonitorOk) digitalInputMonitor.updateIfReady();
   processSerial();
 }

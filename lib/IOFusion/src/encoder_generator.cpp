@@ -1,4 +1,4 @@
-#include "encoder.h"
+#include "encoder_generator.h"
 
 namespace {
 

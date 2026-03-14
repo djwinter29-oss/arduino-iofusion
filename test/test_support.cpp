@@ -58,7 +58,7 @@ void resetTestState() {
   Serial.setInput("");
 }
 
-void runCmd(CmdLine& cli, const char* cmd) {
+void runCmd(FirmwareCli& cli, const char* cmd) {
   Serial.clearOutput();
   Serial.setInput(std::string(cmd) + "\n");
   cli.processSerial();

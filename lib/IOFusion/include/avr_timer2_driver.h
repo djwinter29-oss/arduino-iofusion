@@ -1,7 +1,7 @@
 // Simple Timer2 driver for AVR/Arduino
 // Provides periodic interrupts on Timer2 and a tiny encoder signal generator.
-#ifndef IOFUSION_TIMER_H
-#define IOFUSION_TIMER_H
+#ifndef IOFUSION_AVR_TIMER2_DRIVER_H
+#define IOFUSION_AVR_TIMER2_DRIVER_H
 
 #include <Arduino.h>
 
@@ -34,4 +34,4 @@ class Timer2Driver {
   void dispatchCallbacks();
 };
 
-#endif  // IOFUSION_TIMER_H
+#endif  // IOFUSION_AVR_TIMER2_DRIVER_H

@@ -1,6 +1,6 @@
 #include <unity.h>
 
-#include "analog.h"
+#include "analog_sampler.h"
 
 void test_analog_sampler_branches() {
   AnalogSampler sampler;

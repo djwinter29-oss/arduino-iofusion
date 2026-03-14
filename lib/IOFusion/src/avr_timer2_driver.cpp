@@ -1,7 +1,7 @@
 // NOTE: Timer drivers are AVR-specific. For native/unit-test builds we provide stubs.
 
 #if defined(UNIT_TEST)
-#include "timer.h"
+#include "avr_timer2_driver.h"
 #include <stdint.h>
 
 Timer2Driver* volatile Timer2Driver::_activeDriver = nullptr;
@@ -102,7 +102,7 @@ void Timer2Driver::dispatchCallbacks() {
 #endif
 
 #if !defined(UNIT_TEST)
-#include "timer.h"
+#include "avr_timer2_driver.h"
 
 Timer2Driver* volatile Timer2Driver::_activeDriver = nullptr;
 

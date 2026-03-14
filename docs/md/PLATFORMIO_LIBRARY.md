@@ -66,13 +66,13 @@ lib_deps =
 
 ```cpp
 #include <Arduino.h>
-#include "analog.h"
-#include "digiin.h"
-#include "encoder.h"
-#include "pwm.h"
+#include "analog_sampler.h"
+#include "avr_timer1_pwm.h"
+#include "digital_input_monitor.h"
+#include "encoder_generator.h"
 
 AnalogSampler analogSampler;
-DigiIn digiIn;
+DigitalInputMonitor digitalInputMonitor;
 EncoderGenerator encoder;
 Timer1PWM pwm;
 
@@ -83,7 +83,7 @@ void setup() {
   analogSampler.begin(analogPins, 2);
   analogSampler.setVref(5.0f);
 
-  digiIn.begin(digitalPins, 2, 500, 1000.0f, true);
+  digitalInputMonitor.begin(digitalPins, 2, 500, 1000.0f, true);
   encoder.begin(8, 11, 12, 13, true, false);
 
   pwm.begin(1000.0f);
@@ -93,11 +93,11 @@ void setup() {
 
 void loop() {
   analogSampler.onTick();
-  digiIn.onTick();
+  digitalInputMonitor.onTick();
   encoder.onTick();
 
   analogSampler.sampleIfDue();
-  digiIn.updateIfReady();
+  digitalInputMonitor.updateIfReady();
 }
 ```
 

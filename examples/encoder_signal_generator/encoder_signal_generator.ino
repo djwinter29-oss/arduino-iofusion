@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
-#include "encoder.h"
-#include "timer.h"
+#include "avr_timer2_driver.h"
+#include "encoder_generator.h"
 
 namespace {
 constexpr float kTickHz = 5000.0f;

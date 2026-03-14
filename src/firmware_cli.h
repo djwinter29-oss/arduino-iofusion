@@ -1,18 +1,18 @@
-#ifndef CMDLINE_H
-#define CMDLINE_H
+#ifndef FIRMWARE_CLI_H
+#define FIRMWARE_CLI_H
 
 #include <Arduino.h>
 
-#include "analog.h"
-#include "digiin.h"
-#include "encoder.h"
-#include "pwm.h"
+#include "analog_sampler.h"
+#include "digital_input_monitor.h"
+#include "encoder_generator.h"
+#include "avr_timer1_pwm.h"
 
-class CmdLine {
+class FirmwareCli {
  public:
-  CmdLine(AnalogSampler& analog, DigiIn& digi, EncoderGenerator& encoder, Timer1PWM& pwm,
-          const uint8_t* analogPins, uint8_t analogCount, const uint8_t* digitalPins,
-          uint8_t digitalCount);
+  FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor,
+              EncoderGenerator& encoder, Timer1PWM& pwm, const uint8_t* analogPins,
+              uint8_t analogCount, const uint8_t* digitalPins, uint8_t digitalCount);
 
   void processSerial();
 
@@ -24,7 +24,7 @@ class CmdLine {
   void dispatchCommand();
 
   AnalogSampler& _analog;
-  DigiIn& _digi;
+  DigitalInputMonitor& _digitalMonitor;
   EncoderGenerator& _encoder;
   Timer1PWM& _pwm;
   const uint8_t* _analogPins;
@@ -39,4 +39,4 @@ class CmdLine {
   unsigned long _lastByteTimeMs = 0;
 };
 
-#endif  // CMDLINE_H
+#endif  // FIRMWARE_CLI_H
