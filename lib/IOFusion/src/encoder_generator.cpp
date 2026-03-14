@@ -7,6 +7,16 @@ bool readControlState(volatile uint8_t* portIn, uint8_t mask, bool activeHigh) {
   return activeHigh ? levelHigh : !levelHigh;
 }
 
+int32_t saturatingIncrement(int32_t value) {
+  if (value == INT32_MAX) return INT32_MAX;
+  return value + 1;
+}
+
+int32_t saturatingDecrement(int32_t value) {
+  if (value == INT32_MIN) return INT32_MIN;
+  return value - 1;
+}
+
 }  // namespace
 
 bool EncoderGenerator::begin(const Config& config) {
@@ -80,12 +90,12 @@ void EncoderGenerator::onTick() {
   if (upHigh && !downHigh) {
     _directionUp = true;
     _state = (_state + 1) & 3;
-    _position++;
+    _position = saturatingIncrement(_position);
     stepped = true;
   } else if (!upHigh && downHigh) {
     _directionUp = false;
     _state = (_state - 1) & 3;
-    _position--;
+    _position = saturatingDecrement(_position);
     stepped = true;
   } else {
     // both low or both high: do nothing

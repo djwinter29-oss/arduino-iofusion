@@ -108,6 +108,7 @@ This repository uses a strict ISR-versus-loop ownership model.
 - ISR-owned writes: position, direction, waveform state, output pins.
 - Loop-side reads: `getPosition()`, `getDirection()`.
 - Protection: getters and `reset()` use critical sections.
+- Position contract: absolute count relative to startup or the most recent `reset()`, saturating at `int32_t` limits instead of wrapping.
 
 `Timer1PWM`
 

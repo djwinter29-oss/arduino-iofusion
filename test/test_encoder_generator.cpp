@@ -20,7 +20,7 @@ struct EncoderGeneratorMirror {
   uint8_t upMask;
   uint8_t downMask;
   bool activeHigh;
-  volatile int32_t position;
+    volatile int32_t position;
   volatile bool directionUp;
 };
 
@@ -143,6 +143,30 @@ void test_encoder_generator_config_edges() {
   setDigitalPin(2, false);
   setDigitalPin(3, true);
   encoder.onTick();
+  encoder.reset();
+  TEST_ASSERT_EQUAL_INT32(0, encoder.getPosition());
+}
+
+void test_encoder_generator_position_saturates() {
+  EncoderGenerator encoder;
+  TEST_ASSERT_TRUE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
+
+  EncoderGeneratorMirror& mirror = reinterpret_cast<EncoderGeneratorMirror&>(encoder);
+
+  mirror.position = INT32_MAX;
+  setDigitalPin(2, true);
+  setDigitalPin(3, false);
+  encoder.onTick();
+  TEST_ASSERT_EQUAL_INT32(INT32_MAX, encoder.getPosition());
+  TEST_ASSERT_TRUE(encoder.getDirection());
+
+  mirror.position = INT32_MIN;
+  setDigitalPin(2, false);
+  setDigitalPin(3, true);
+  encoder.onTick();
+  TEST_ASSERT_EQUAL_INT32(INT32_MIN, encoder.getPosition());
+  TEST_ASSERT_FALSE(encoder.getDirection());
+
   encoder.reset();
   TEST_ASSERT_EQUAL_INT32(0, encoder.getPosition());
 }

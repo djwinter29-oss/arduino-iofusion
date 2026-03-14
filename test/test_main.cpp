@@ -17,6 +17,7 @@ int main(int argc, char** argv) {
   RUN_TEST(test_digital_input_monitor_config_edges);
   RUN_TEST(test_encoder_generator_branches);
   RUN_TEST(test_encoder_generator_config_edges);
+  RUN_TEST(test_encoder_generator_position_saturates);
   RUN_TEST(test_firmware_cli_commands);
   RUN_TEST(test_firmware_cli_edge_cases);
   RUN_TEST(test_firmware_cli_internal_edges);

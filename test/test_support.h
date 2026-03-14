@@ -29,6 +29,7 @@ void test_digital_input_monitor_branches();
 void test_digital_input_monitor_config_edges();
 void test_encoder_generator_branches();
 void test_encoder_generator_config_edges();
+void test_encoder_generator_position_saturates();
 void test_firmware_cli_commands();
 void test_firmware_cli_edge_cases();
 void test_firmware_cli_internal_edges();

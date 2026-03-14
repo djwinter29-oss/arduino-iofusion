@@ -46,11 +46,14 @@ class EncoderGenerator {
   /// @brief Advances the generated waveform by one step from ISR context.
   void onTick();
 
-  /// @brief Returns the generated logical position counter.
+  /// @brief Returns the absolute generated position count.
+  /// The count is relative to startup or the most recent @ref reset() call.
+  /// It saturates at the `int32_t` limits instead of wrapping.
   int32_t getPosition();
   /// @brief Returns the last generated direction.
   bool getDirection();
-  /// @brief Resets waveform state and logical position to the idle state.
+  /// @brief Resets waveform state and absolute position to the idle state.
+  /// This establishes a new zero origin for subsequent position reads.
   void reset();
 
  private:

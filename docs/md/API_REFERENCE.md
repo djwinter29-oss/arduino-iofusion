@@ -163,12 +163,15 @@ Preferred setup:
 - `void onTick()`
   - ISR-side state advance based on direction input levels.
 
-- `int32_t getPosition()`
+  - `int32_t getPosition()`
+    - Returns the absolute generated position count relative to startup or the most recent `reset()`.
+    - The count saturates at the `int32_t` limits instead of wrapping.
 - `bool getDirection()`
   - Direction semantics: `true` => UP, `false` => DOWN.
 
 - `void reset()`
-  - Resets position/state and drives outputs low.
+    - Resets position/state and drives outputs low.
+    - Establishes a new zero origin for subsequent absolute position reads.
 
 ---
 
