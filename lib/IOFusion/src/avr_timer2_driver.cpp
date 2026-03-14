@@ -6,9 +6,9 @@ namespace {
 
 constexpr uint32_t kTimer2CpuHz =
 #if defined(F_CPU)
-  F_CPU;
+    F_CPU;
 #else
-  16000000UL;
+    16000000UL;
 #endif
 
 uint16_t computeTimer2Ocr(float freqHz, uint16_t& chosenPres) {
@@ -17,7 +17,7 @@ uint16_t computeTimer2Ocr(float freqHz, uint16_t& chosenPres) {
   const uint16_t presVals[] = {1, 8, 32, 64, 128, 256, 1024};
   for (uint8_t i = 0; i < sizeof(presVals) / sizeof(presVals[0]); ++i) {
     float pres = static_cast<float>(presVals[i]);
-  float ocr = (kTimer2CpuHz / (pres * freqHz)) - 1.0f;
+    float ocr = (kTimer2CpuHz / (pres * freqHz)) - 1.0f;
     if (ocr >= 1.0f && ocr <= 255.0f) {
       chosenPres = presVals[i];
       return static_cast<uint16_t>(ocr + 0.5f);

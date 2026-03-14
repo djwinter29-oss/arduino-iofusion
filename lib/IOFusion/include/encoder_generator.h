@@ -24,8 +24,8 @@ class EncoderGenerator {
     bool activeHigh = true;
 
     Config() = default;
-    Config(uint8_t pinAIn, uint8_t pinBIn, uint8_t upPinIn, uint8_t downPinIn,
-           bool usePullupIn, bool activeHighIn)
+    Config(uint8_t pinAIn, uint8_t pinBIn, uint8_t upPinIn, uint8_t downPinIn, bool usePullupIn,
+           bool activeHighIn)
         : pinA(pinAIn),
           pinB(pinBIn),
           upPin(upPinIn),

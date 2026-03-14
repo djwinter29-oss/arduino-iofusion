@@ -4,9 +4,9 @@
 #include <Arduino.h>
 
 #include "analog_sampler.h"
+#include "avr_timer1_pwm.h"
 #include "digital_input_monitor.h"
 #include "encoder_generator.h"
-#include "avr_timer1_pwm.h"
 
 class FirmwareCli {
  public:
@@ -25,11 +25,11 @@ class FirmwareCli {
           digitalCount(digitalCountIn) {}
   };
 
-  FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor,
-              EncoderGenerator& encoder, Timer1PWM& pwm, const Config& config);
-  FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor,
-              EncoderGenerator& encoder, Timer1PWM& pwm, const uint8_t* analogPins,
-              uint8_t analogCount, const uint8_t* digitalPins, uint8_t digitalCount);
+  FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor, EncoderGenerator& encoder,
+              Timer1PWM& pwm, const Config& config);
+  FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor, EncoderGenerator& encoder,
+              Timer1PWM& pwm, const uint8_t* analogPins, uint8_t analogCount,
+              const uint8_t* digitalPins, uint8_t digitalCount);
 
   void processSerial();
 

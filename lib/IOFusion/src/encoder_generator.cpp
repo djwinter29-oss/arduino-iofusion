@@ -24,8 +24,8 @@ bool EncoderGenerator::begin(const Config& config) {
                config.activeHigh);
 }
 
-bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down,
-                             bool usePullup, bool activeHigh) {
+bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down, bool usePullup,
+                             bool activeHigh) {
   if (pinA == pinB) return false;
   uint8_t portA = digitalPinToPort(pinA);
   uint8_t portB = digitalPinToPort(pinB);

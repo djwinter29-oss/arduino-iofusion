@@ -38,20 +38,13 @@ const AnalogSampler::Config kAnalogConfig = {
 };
 
 const DigitalInputMonitor::Config kDigitalMonitorConfig = {
-    kDigitalPins,
-    static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])),
-    500,
-  static_cast<float>(kTimerTickHz),
+    kDigitalPins, static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])),
+    500,          static_cast<float>(kTimerTickHz),
     true,
 };
 
 const EncoderGenerator::Config kEncoderConfig = {
-    4,
-    5,
-    6,
-    7,
-    true,
-    false,
+    4, 5, 6, 7, true, false,
 };
 
 const Timer1PWM::Config kPwmConfig(100.0f);

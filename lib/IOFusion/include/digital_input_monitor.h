@@ -65,7 +65,8 @@ class DigitalInputMonitor {
 
   /// @brief Returns the number of configured pins.
   uint8_t getPinCount() const;
-  /// @brief Copies the currently published frame and associated telemetry under one critical section.
+  /// @brief Copies the currently published frame and associated telemetry under one critical
+  /// section.
   void copyFrame(Frame& frame) const;
   /// @brief Returns the latest frequency estimate for a configured pin.
   float getFrequency(uint8_t idx) const;

@@ -20,7 +20,7 @@ struct EncoderGeneratorMirror {
   uint8_t upMask;
   uint8_t downMask;
   bool activeHigh;
-    volatile int32_t position;
+  volatile int32_t position;
   volatile bool directionUp;
 };
 

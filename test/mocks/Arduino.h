@@ -41,7 +41,6 @@ extern int mockNullInputPort;
 extern int mockNullOutputPort;
 extern int mockZeroMaskPin;
 
-
 inline void pinMode(uint8_t pin, uint8_t mode) {
   if (pin < 64) mockPinModes[pin] = mode;
 }

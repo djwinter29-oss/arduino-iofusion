@@ -19,8 +19,7 @@ void test_firmware_cli_commands() {
   const uint8_t aPins[] = {0};
   const uint8_t dPins[] = {2};
   TEST_ASSERT_TRUE(analog.begin(AnalogSampler::Config{aPins, 1, 5.0f}));
-  TEST_ASSERT_TRUE(
-      digitalMonitor.begin(DigitalInputMonitor::Config{dPins, 1, 4, 1000.0f, false}));
+  TEST_ASSERT_TRUE(digitalMonitor.begin(DigitalInputMonitor::Config{dPins, 1, 4, 1000.0f, false}));
   TEST_ASSERT_TRUE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
 
   FirmwareCli cli(analog, digitalMonitor, encoder, pwm, FirmwareCli::Config{aPins, 1, dPins, 1});
@@ -157,8 +156,7 @@ void test_firmware_cli_edge_cases() {
   const uint8_t aPins[] = {0, 1};
   const uint8_t dPins[] = {2, 3};
   TEST_ASSERT_TRUE(analog.begin(AnalogSampler::Config{aPins, 2, 5.0f}));
-  TEST_ASSERT_TRUE(
-      digitalMonitor.begin(DigitalInputMonitor::Config{dPins, 2, 2, 1000.0f, false}));
+  TEST_ASSERT_TRUE(digitalMonitor.begin(DigitalInputMonitor::Config{dPins, 2, 2, 1000.0f, false}));
   TEST_ASSERT_TRUE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
 
   mockAnalogValues[0] = 256;
@@ -232,8 +230,7 @@ void test_firmware_cli_internal_edges() {
   const uint8_t aPins[] = {0};
   const uint8_t dPins[] = {2};
   TEST_ASSERT_TRUE(analog.begin(AnalogSampler::Config{aPins, 1, 5.0f}));
-  TEST_ASSERT_TRUE(
-      digitalMonitor.begin(DigitalInputMonitor::Config{dPins, 1, 2, 1000.0f, false}));
+  TEST_ASSERT_TRUE(digitalMonitor.begin(DigitalInputMonitor::Config{dPins, 1, 2, 1000.0f, false}));
   TEST_ASSERT_TRUE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
 
   FirmwareCli cli(analog, digitalMonitor, encoder, pwm, aPins, 1, dPins, 1);

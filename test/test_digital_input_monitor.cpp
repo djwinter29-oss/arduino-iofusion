@@ -91,10 +91,10 @@ void test_digital_input_monitor_config_edges() {
   const uint8_t pins[] = {2};
   const uint8_t mixedPins[] = {2, 64};
 
-  TEST_ASSERT_FALSE(digitalMonitor.begin(DigitalInputMonitor::Config{nullptr, 1, 4, 1000.0f,
-                                                                     false}));
-  TEST_ASSERT_FALSE(digitalMonitor.begin(DigitalInputMonitor::Config{nullptr, 0, 4, 1000.0f,
-                                                                     false}));
+  TEST_ASSERT_FALSE(
+      digitalMonitor.begin(DigitalInputMonitor::Config{nullptr, 1, 4, 1000.0f, false}));
+  TEST_ASSERT_FALSE(
+      digitalMonitor.begin(DigitalInputMonitor::Config{nullptr, 0, 4, 1000.0f, false}));
   TEST_ASSERT_FALSE(digitalMonitor.begin(nullptr, 1, 4, 1000.0f, false));
   TEST_ASSERT_FALSE(digitalMonitor.begin(pins, 9, 4, 1000.0f, false));
   TEST_ASSERT_FALSE(digitalMonitor.begin(mixedPins, 2, 4, 1000.0f, false));
@@ -166,19 +166,19 @@ void test_digital_input_monitor_config_edges() {
 
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, digitalMonitor.getFrequency(0));
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, digitalMonitor.getDutyCycle(0));
-    TEST_ASSERT_TRUE(digitalMonitor.isFrameStale());
+  TEST_ASSERT_TRUE(digitalMonitor.isFrameStale());
   TEST_ASSERT_EQUAL_UINT32(9, digitalMonitor.getFrameSequence());
   TEST_ASSERT_EQUAL_UINT32(7, digitalMonitor.getOverrunCount());
-    TEST_ASSERT_FALSE(mirror.pendingFrameStale);
+  TEST_ASSERT_FALSE(mirror.pendingFrameStale);
 
   mirror.tickMilliHz = 0;
   mirror.samplesInWindow = 1;
   mirror.windowReady = true;
-    mirror.pendingFrameStale = true;
+  mirror.pendingFrameStale = true;
   mirror.frameStale = true;
   mirror.frameSequence = 0xFFFFFFFFUL;
   digitalMonitor.updateIfReady();
-    TEST_ASSERT_TRUE(digitalMonitor.isFrameStale());
+  TEST_ASSERT_TRUE(digitalMonitor.isFrameStale());
   TEST_ASSERT_EQUAL_UINT32(0xFFFFFFFFUL, digitalMonitor.getFrameSequence());
 
   mirror.tickMilliHz = 1000000UL;
@@ -190,17 +190,17 @@ void test_digital_input_monitor_config_edges() {
   mirror.frameStale = true;
   mirror.frameSequence = 0xFFFFFFFFUL;
   digitalMonitor.updateIfReady();
-    TEST_ASSERT_TRUE(digitalMonitor.isFrameStale());
+  TEST_ASSERT_TRUE(digitalMonitor.isFrameStale());
   TEST_ASSERT_EQUAL_UINT32(0xFFFFFFFFUL, digitalMonitor.getFrameSequence());
 
   mirror.overrunCount = 0xFFFFFFFFUL;
   mirror.windowReady = true;
-    mirror.pendingFrameStale = false;
+  mirror.pendingFrameStale = false;
   mirror.frameStale = true;
   digitalMonitor.onTick();
   TEST_ASSERT_TRUE(digitalMonitor.isFrameStale());
   TEST_ASSERT_EQUAL_UINT32(0xFFFFFFFFUL, digitalMonitor.getOverrunCount());
-    TEST_ASSERT_TRUE(mirror.pendingFrameStale);
+  TEST_ASSERT_TRUE(mirror.pendingFrameStale);
 
   mirror.pinPortIn[0] = nullptr;
   mirror.windowReady = false;

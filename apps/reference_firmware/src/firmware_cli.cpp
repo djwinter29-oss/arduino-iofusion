@@ -120,7 +120,9 @@ void printCommaIfNeeded(bool& firstField) {
 }
 
 void printHelp() {
-  Serial.println(F("{\"help\":\"analog? digital? encoder? all? reset(immediate) pwm-freq <hz> pwm-duty <ch> <pct>\"}"));
+  Serial.println(
+      F("{\"help\":\"analog? digital? encoder? all? reset(immediate) pwm-freq <hz> pwm-duty <ch> "
+        "<pct>\"}"));
 }
 
 bool handlePwmFreq(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
@@ -171,9 +173,8 @@ FirmwareCli::FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMoni
                   config.digitalPins, config.digitalCount) {}
 
 FirmwareCli::FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor,
-                         EncoderGenerator& encoder, Timer1PWM& pwm,
-                         const uint8_t* analogPins, uint8_t analogCount,
-                         const uint8_t* digitalPins, uint8_t digitalCount)
+                         EncoderGenerator& encoder, Timer1PWM& pwm, const uint8_t* analogPins,
+                         uint8_t analogCount, const uint8_t* digitalPins, uint8_t digitalCount)
     : _analog(analog),
       _digitalMonitor(digitalMonitor),
       _encoder(encoder),

@@ -22,7 +22,7 @@ class AnalogSampler {
 
     Config() = default;
     Config(const uint8_t* channelsIn, uint8_t channelCountIn, float vrefIn)
-      : channels(channelsIn), channelCount(channelCountIn), vref(vrefIn) {}
+        : channels(channelsIn), channelCount(channelCountIn), vref(vrefIn) {}
   };
 
   /// @brief Constructs a sampler with no configured channels.
