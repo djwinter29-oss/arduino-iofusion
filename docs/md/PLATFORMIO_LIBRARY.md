@@ -112,23 +112,31 @@ See full example: `examples/basic_usage/basic_usage.ino`
 ## 6) Publish Process
 
 1. Ensure `library.json` metadata is complete and correct.
-2. Update `version` for every release.
-3. Authenticate PlatformIO CLI if needed.
-4. Publish:
+2. Create a Git tag in the form `vX.Y.Z` for the version you want to publish.
+3. The GitHub release workflow stamps `library.json` with that tag version before calling `pio pkg publish`, so the tag is the source of truth for registry releases.
+4. Authenticate PlatformIO CLI if needed.
+5. Publish:
+
+Via GitHub Actions:
+
+- Push the `vX.Y.Z` tag, or run the `Release Publish (PlatformIO)` workflow manually and provide the same tag.
+
+Manual CLI fallback:
 
 ```bash
+python tools/set_library_version.py X.Y.Z
 pio pkg publish --type library
 ```
 
-5. Verify page in PlatformIO Registry.
+6. Verify page in PlatformIO Registry.
 
 ## 7) New Release Checklist
 
 - [ ] Code/tests/docs updated
 - [ ] CI green
-- [ ] `library.json` version bumped
+- [ ] release tag prepared (`vX.Y.Z`)
 - [ ] Tag/release note prepared (optional but recommended)
-- [ ] `pio pkg publish --type library` executed
+- [ ] GitHub release workflow executed, or manual `set_library_version.py` + `pio pkg publish` executed
 
 ## 8) Unpublish (if a version is bad)
 
