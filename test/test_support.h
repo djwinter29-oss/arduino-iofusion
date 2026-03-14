@@ -27,6 +27,7 @@ void test_analog_sampler_branches();
 void test_analog_sampler_config_edges();
 void test_digital_input_monitor_branches();
 void test_digital_input_monitor_config_edges();
+void test_digital_input_monitor_copy_frame();
 void test_encoder_generator_branches();
 void test_encoder_generator_config_edges();
 void test_encoder_generator_position_saturates();

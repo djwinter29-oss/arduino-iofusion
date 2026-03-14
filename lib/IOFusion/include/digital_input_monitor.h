@@ -11,6 +11,8 @@
 /// Accuracy depends on the configured tick rate and measurement window.
 class DigitalInputMonitor {
  public:
+  static const uint8_t MAX_PINS = 8;
+
   /// @brief Startup configuration for DigitalInputMonitor.
   struct Config {
     /// Pointer to the input pin list.
@@ -51,8 +53,20 @@ class DigitalInputMonitor {
   /// @brief Converts the most recent completed sampling window into frequency and duty estimates.
   void updateIfReady();
 
+  /// @brief Snapshot of one coherently copied published measurement frame.
+  struct Frame {
+    uint8_t pinCount = 0;
+    uint32_t frameSequence = 0;
+    bool stale = false;
+    uint32_t overrunCount = 0;
+    uint32_t frequencyMilliHz[MAX_PINS] = {0};
+    uint16_t dutyPermille[MAX_PINS] = {0};
+  };
+
   /// @brief Returns the number of configured pins.
   uint8_t getPinCount() const;
+  /// @brief Copies the currently published frame and associated telemetry under one critical section.
+  void copyFrame(Frame& frame) const;
   /// @brief Returns the latest frequency estimate for a configured pin.
   float getFrequency(uint8_t idx) const;
   /// @brief Returns the latest frequency estimate in millihertz for a configured pin.
@@ -72,7 +86,6 @@ class DigitalInputMonitor {
   uint32_t getOverrunCount() const;
 
  private:
-  static const uint8_t MAX_PINS = 8;
   uint8_t _pins[MAX_PINS];
   uint8_t _pinCount = 0;
   uint16_t _windowTicks = 1000;
@@ -85,7 +98,8 @@ class DigitalInputMonitor {
   volatile uint8_t _lastState[MAX_PINS];
   volatile bool _windowReady = false;
   volatile uint32_t _overrunCount = 0;
-  volatile bool _frameStale = false;
+  volatile bool _pendingFrameStale = false;
+  bool _frameStale = false;
   uint32_t _frameSequence = 0;
   uint32_t _freqMilliHz[MAX_PINS];
   uint16_t _dutyPermille[MAX_PINS];

@@ -113,19 +113,23 @@ Preferred setup:
 
 - `void onTick()`
   - ISR-side sampling and counter accumulation.
-  - If the previous sampling window has not yet been drained, the monitor increments an overrun counter and marks the published frame stale instead of silently sampling stale data.
+  - If the previous sampling window has not yet been drained, the monitor increments an overrun counter and marks the next published frame stale instead of silently sampling stale data.
 
 - `void updateIfReady()`
   - Loop-side conversion to frequency (Hz) and duty (%).
 
 - `uint8_t getPinCount() const`
+- `void copyFrame(Frame& frame) const`
+  - Copies the currently published frame metadata and published per-pin results under one critical section.
+  - Prefer this when a caller needs one coherent telemetry snapshot instead of field-by-field reads.
 - `float getFrequency(uint8_t idx) const`
 - `uint32_t getFrequencyMilliHz(uint8_t idx) const`
 - `float getDutyCycle(uint8_t idx) const`
 - `uint16_t getDutyPermille(uint8_t idx) const`
   - Out-of-range `idx` returns `0.0`.
 - `bool isFrameStale() const`
-  - Returns `true` when the currently published measurement frame has become stale because one or more ticks were dropped before a replacement frame was published.
+  - Returns `true` when the currently published measurement frame was published after one or more ticks were dropped before that frame could be drained.
+  - The value is latched when `updateIfReady()` publishes a frame and remains attached to that frame until the next publish.
 - `uint32_t getFrameSequence() const`
   - Returns a monotonic sequence number for the published measurement frame.
   - The value increments each time `updateIfReady()` publishes a new frame.
@@ -218,6 +222,7 @@ Preferred setup:
   - Starts Timer2 near requested frequency.
   - Timer2 configuration is startup-only; runtime retuning is intentionally not supported.
   - Returns the OCR value used on AVR, or `0` on invalid input / when Timer2 is already active.
+  - Bring-up is ordered so Timer2 counter/pending flags are cleared before compare interrupts are armed.
   - Call `stop()` first if you need to release Timer2 and configure it again.
   - The caller is responsible for ensuring Timer2 is not needed by other firmware features on the target.
 

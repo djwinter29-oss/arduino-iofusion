@@ -45,25 +45,6 @@ uint16_t Timer2Driver::beginHz(float freqHz) {
   uint16_t chosenOCR = computeTimer2Ocr(freqHz, chosenPres);
   if (chosenPres == 0) return 0;
 
-  noInterrupts();
-  if (_activeDriver != nullptr) {
-    interrupts();
-    return 0;
-  }
-  resetCallbacks();
-  _activeDriver = this;
-  interrupts();
-
-  // Stop timer2
-  TCCR2A = 0;
-  TCCR2B = 0;
-  TIMSK2 = 0;  // disable interrupts
-
-  // Configure CTC mode
-  TCCR2A = _BV(WGM21);
-  // Set OCR
-  OCR2A = (uint8_t)chosenOCR;
-  // Set prescaler bits
   uint8_t csbits = 0;
   switch (chosenPres) {
     case 1:
@@ -91,10 +72,31 @@ uint16_t Timer2Driver::beginHz(float freqHz) {
       csbits = _BV(CS20);
       break;
   }
-  TCCR2B = csbits;
 
-  // enable compare match A interrupt
-  TIMSK2 |= _BV(OCIE2A);
+  noInterrupts();
+  if (_activeDriver != nullptr) {
+    interrupts();
+    return 0;
+  }
+
+  resetCallbacks();
+
+  // Stop Timer2 and clear any stale counter/interrupt state before arming it.
+  TCCR2A = 0;
+  TCCR2B = 0;
+  TIMSK2 = 0;
+  TCNT2 = 0;
+  TIFR2 = _BV(OCF2A) | _BV(TOV2) | _BV(OCF2B);
+
+  // Configure CTC mode and preload the compare value while the timer is stopped.
+  TCCR2A = _BV(WGM21);
+  OCR2A = (uint8_t)chosenOCR;
+  _activeDriver = this;
+
+  // Enable compare-match dispatch only after the timer state and owner are valid.
+  TIMSK2 = _BV(OCIE2A);
+  TCCR2B = csbits;
+  interrupts();
   return (uint16_t)chosenOCR;
 }
 

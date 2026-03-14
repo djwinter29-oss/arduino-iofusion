@@ -62,6 +62,7 @@ bool DigitalInputMonitor::begin(const uint8_t* pins, uint8_t count, uint16_t win
   _samplesInWindow = 0;
   _windowReady = false;
   _overrunCount = 0;
+  _pendingFrameStale = false;
   _frameStale = false;
   _frameSequence = 0;
   return true;
@@ -69,7 +70,7 @@ bool DigitalInputMonitor::begin(const uint8_t* pins, uint8_t count, uint16_t win
 
 void DigitalInputMonitor::onTick() {
   if (_windowReady) {
-    _frameStale = true;
+    _pendingFrameStale = true;
     if (_overrunCount != 0xFFFFFFFFUL) {
       ++_overrunCount;
     }
@@ -94,10 +95,12 @@ void DigitalInputMonitor::updateIfReady() {
   uint16_t edgeCnt[MAX_PINS];
   uint16_t highCnt[MAX_PINS];
   uint32_t tickMilliHz = 0;
+  bool publishedFrameStale = false;
 
   noInterrupts();
   samples = _samplesInWindow;
   tickMilliHz = _tickMilliHz;
+  publishedFrameStale = _pendingFrameStale;
   for (uint8_t i = 0; i < _pinCount; ++i) {
     edgeCnt[i] = _edgeCnt[i];
     highCnt[i] = _highCnt[i];
@@ -106,6 +109,7 @@ void DigitalInputMonitor::updateIfReady() {
   }
   _samplesInWindow = 0;
   _windowReady = false;
+  _pendingFrameStale = false;
   interrupts();
 
   if (samples == 0 || tickMilliHz == 0) {
@@ -113,7 +117,7 @@ void DigitalInputMonitor::updateIfReady() {
       _freqMilliHz[i] = 0;
       _dutyPermille[i] = 0;
     }
-    _frameStale = false;
+    _frameStale = publishedFrameStale;
     if (_frameSequence != 0xFFFFFFFFUL) {
       ++_frameSequence;
     }
@@ -126,7 +130,7 @@ void DigitalInputMonitor::updateIfReady() {
     uint32_t dutyPermille = (static_cast<uint32_t>(highCnt[i]) * 1000U) + (samples / 2U);
     _dutyPermille[i] = static_cast<uint16_t>(dutyPermille / samples);
   }
-  _frameStale = false;
+  _frameStale = publishedFrameStale;
   if (_frameSequence != 0xFFFFFFFFUL) {
     ++_frameSequence;
   }
@@ -134,6 +138,19 @@ void DigitalInputMonitor::updateIfReady() {
 
 uint8_t DigitalInputMonitor::getPinCount() const {
   return _pinCount;
+}
+
+void DigitalInputMonitor::copyFrame(Frame& frame) const {
+  noInterrupts();
+  frame.pinCount = _pinCount;
+  frame.frameSequence = _frameSequence;
+  frame.stale = _frameStale;
+  frame.overrunCount = _overrunCount;
+  for (uint8_t i = 0; i < MAX_PINS; ++i) {
+    frame.frequencyMilliHz[i] = _freqMilliHz[i];
+    frame.dutyPermille[i] = _dutyPermille[i];
+  }
+  interrupts();
 }
 
 float DigitalInputMonitor::getFrequency(uint8_t idx) const {

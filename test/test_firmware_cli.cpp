@@ -44,6 +44,7 @@ void test_firmware_cli_commands() {
   digitalMonitor.onTick();
   digitalMonitor.onTick();
   digitalMonitor.onTick();
+  digitalMonitor.updateIfReady();
   runCmd(cli, "digital?");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"stale\":true"));
 
@@ -188,7 +189,7 @@ void test_firmware_cli_edge_cases() {
 
   runCmd(cli, "digital?");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"frameSeq\":1"));
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"stale\":false"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"stale\":true"));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"overrunTicks\":1"));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"d2\""));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), ",\"d3\""));

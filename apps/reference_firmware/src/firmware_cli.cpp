@@ -187,19 +187,24 @@ void FirmwareCli::respondAnalog() {
 }
 
 void FirmwareCli::respondDigital() {
+  DigitalInputMonitor::Frame frame;
+  _digitalMonitor.copyFrame(frame);
+  uint8_t responsePinCount = _digitalCount;
+  if (responsePinCount > frame.pinCount) responsePinCount = frame.pinCount;
+
   Serial.print(F("{\"frameSeq\":"));
-  Serial.print(_digitalMonitor.getFrameSequence());
+  Serial.print(frame.frameSequence);
   Serial.print(F(",\"stale\":"));
-  Serial.print(_digitalMonitor.isFrameStale() ? F("true") : F("false"));
+  Serial.print(frame.stale ? F("true") : F("false"));
   Serial.print(F(",\"overrunTicks\":"));
-  Serial.print(_digitalMonitor.getOverrunCount());
-  for (uint8_t i = 0; i < _digitalCount; ++i) {
+  Serial.print(frame.overrunCount);
+  for (uint8_t i = 0; i < responsePinCount; ++i) {
     Serial.print(F(",\"d"));
     Serial.print(_digitalPins[i]);
     Serial.print(F("\":{\"freq\":"));
-    printDeciScaled((_digitalMonitor.getFrequencyMilliHz(i) + 50U) / 100U);
+    printDeciScaled((frame.frequencyMilliHz[i] + 50U) / 100U);
     Serial.print(F(",\"duty\":"));
-    printDeciScaled(_digitalMonitor.getDutyPermille(i));
+    printDeciScaled(frame.dutyPermille[i]);
     Serial.print(F("}"));
   }
   Serial.println(F("}"));
