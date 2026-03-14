@@ -121,6 +121,30 @@ Header: `lib/IOFusion/include/timer.h`
 
 ---
 
+## `CmdLine` command surface (firmware serial)
+
+Source: `src/cmdline.cpp`
+
+Supported commands (case-insensitive command token):
+
+- `analog?`
+- `digital?`
+- `encoder?`
+- `pwm-freq <hz>`
+- `pwm-duty <ch> <pct>`
+- `help`
+
+Response contract:
+
+- Success: `{"status":"ok"}` for mutating PWM commands.
+- Errors (stable keys): `{"error":"..."}`.
+- Unknown command: `{"error":"unknown command"}`.
+
+Parser behavior notes:
+
+- Leading/trailing and repeated spaces are accepted.
+- Extra tokens after a known command are ignored by current implementation.
+
 ## Compatibility scope
 
 IOFusion is intentionally maintained for **Arduino-focused** usage. Compatibility commitments in this document are made within that scope.

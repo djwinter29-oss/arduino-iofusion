@@ -195,6 +195,9 @@ void test_cmdline_commands() {
   runCmd(cli, "pwm-duty -1 10");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid channel"));
 
+  runCmd(cli, "pwm-duty 1 12.5x");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid duty"));
+
   runCmd(cli, "pwm-duty 1 12.5");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
 
