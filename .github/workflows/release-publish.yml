@@ -152,16 +152,16 @@ jobs:
 
           EXTRA_NOTES=$(cat <<EOF
 
-## PlatformIO
-- Registry: ${REGISTRY_URL}
-- Version: ${VERSION}
+          ## PlatformIO
+          - Registry: ${REGISTRY_URL}
+          - Version: ${VERSION}
 
-### Install
-${CODE_FENCE}ini
-${INSTALL_SNIPPET}
-${CODE_FENCE}
-EOF
-)
+          ### Install
+          ${CODE_FENCE}ini
+          ${INSTALL_SNIPPET}
+          ${CODE_FENCE}
+          EOF
+          )
 
           if gh release view "${TAG}" >/dev/null 2>&1; then
             CURRENT_BODY=$(gh release view "${TAG}" --json body --jq '.body // ""')
