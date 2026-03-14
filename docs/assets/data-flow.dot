@@ -1,0 +1,30 @@
+digraph data_flow {
+  rankdir=TB;
+  graph [pad=0.2, nodesep=0.35, ranksep=0.45];
+  node [shape=box, style="rounded", fontname="Helvetica"];
+  edge [fontname="Helvetica"];
+
+  T2 [label="Timer2Driver ISR"];
+  AS [label="AnalogSampler flag"];
+  DI [label="DigitalInputMonitor counters"];
+  EN [label="EncoderGenerator state"];
+  LOOP [label="loop()"];
+  CMD [label="Command parser"];
+  PWM [label="Timer1 PWM"];
+  RESP [label="Serial responses"];
+
+  T2 -> AS;
+  T2 -> DI;
+  T2 -> EN;
+
+  LOOP -> AS;
+  LOOP -> DI;
+  LOOP -> CMD;
+
+  CMD -> PWM;
+  CMD -> RESP;
+
+  AS -> RESP;
+  DI -> RESP;
+  EN -> RESP;
+}

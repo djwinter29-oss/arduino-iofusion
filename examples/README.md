@@ -2,7 +2,7 @@
 
 This folder contains runnable sketches for Arduino Uno-class targets.
 
-## 1) `basic_usage/basic_usage.ino`
+## 1) basic_usage/basic_usage.ino
 
 **When to use**
 - Quick smoke test for all major modules together (`AnalogSampler`, `DigitalInputMonitor`, `EncoderGenerator`, `Timer1PWM`).
@@ -21,7 +21,7 @@ This folder contains runnable sketches for Arduino Uno-class targets.
 
 ---
 
-## 2) `frequency_monitor/frequency_monitor.ino`
+## 2) frequency_monitor/frequency_monitor.ino
 
 **When to use**
 - Measure frequency and duty cycle on digital inputs.
@@ -37,7 +37,7 @@ This folder contains runnable sketches for Arduino Uno-class targets.
 
 ---
 
-## 3) `encoder_signal_generator/encoder_signal_generator.ino`
+## 3) encoder_signal_generator/encoder_signal_generator.ino
 
 **When to use**
 - Generate quadrature encoder signals with direction control.
@@ -54,7 +54,7 @@ This folder contains runnable sketches for Arduino Uno-class targets.
 
 ---
 
-## 4) `pwm_dual_channel/pwm_dual_channel.ino`
+## 4) pwm_dual_channel/pwm_dual_channel.ino
 
 **When to use**
 - Drive two complementary PWM outputs using Timer1.

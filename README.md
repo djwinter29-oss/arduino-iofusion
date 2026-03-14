@@ -72,25 +72,9 @@ The same 10 kHz scheduler does not imply a 10 kHz analog sweep. `AnalogSampler` 
 
 ### Data flow
 
+![Runtime data flow](docs/assets/data-flow.png)
 
-```mermaid
-flowchart TD
-    T2[Timer2Driver ISR] --> AS[AnalogSampler flag]
-    T2 --> DI[DigitalInputMonitor counters]
-    T2 --> EN[EncoderGenerator state]
-
-    LOOP[loop] --> AS
-    LOOP --> DI
-    LOOP --> CMD[Command parser]
-
-    CMD --> PWM[Timer1 PWM]
-    CMD --> RESP[Serial responses]
-
-    AS --> RESP
-    DI --> RESP
-    EN --> RESP
-
-```
+Graph source: `docs/assets/data-flow.dot`
 
 ### Timing model
 
