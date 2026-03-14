@@ -3,6 +3,10 @@
 #include <ctype.h>
 #include <string.h>
 
+#if defined(__AVR__)
+#include <avr/wdt.h>
+#endif
+
 namespace {
 
 template <typename T>
@@ -110,8 +114,13 @@ void printStatusOk() {
   Serial.println(F("{\"status\":\"ok\"}"));
 }
 
+void printCommaIfNeeded(bool& firstField) {
+  if (!firstField) Serial.print(F(","));
+  firstField = false;
+}
+
 void printHelp() {
-  Serial.println(F("{\"help\":\"analog? digital? encoder? pwm-freq <hz> pwm-duty <ch> <pct>\"}"));
+  Serial.println(F("{\"help\":\"analog? digital? encoder? all? reset pwm-freq <hz> pwm-duty <ch> <pct>\"}"));
 }
 
 bool handlePwmFreq(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
@@ -174,32 +183,35 @@ FirmwareCli::FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMoni
       _digitalPins(digitalPins),
       _digitalCount(digitalCount) {}
 
-void FirmwareCli::respondAnalog() {
-  Serial.print(F("{"));
+void FirmwareCli::appendAnalogFields(bool& firstField) {
   for (uint8_t i = 0; i < _analogCount; ++i) {
+    printCommaIfNeeded(firstField);
     Serial.print(F("\"a"));
     Serial.print(_analogPins[i]);
     Serial.print(F("\":"));
     printMillivoltsAsVolts(_analog.getMillivolts(i));
-    if (i + 1 < _analogCount) Serial.print(F(","));
   }
-  Serial.println(F("}"));
 }
 
-void FirmwareCli::respondDigital() {
-  DigitalInputMonitor::Frame frame;
-  _digitalMonitor.copyFrame(frame);
+void FirmwareCli::appendDigitalFields(bool& firstField, const DigitalInputMonitor::Frame& frame) {
   uint8_t responsePinCount = _digitalCount;
   if (responsePinCount > frame.pinCount) responsePinCount = frame.pinCount;
 
-  Serial.print(F("{\"frameSeq\":"));
+  printCommaIfNeeded(firstField);
+  Serial.print(F("\"frameSeq\":"));
   Serial.print(frame.frameSequence);
-  Serial.print(F(",\"stale\":"));
+
+  printCommaIfNeeded(firstField);
+  Serial.print(F("\"stale\":"));
   Serial.print(frame.stale ? F("true") : F("false"));
-  Serial.print(F(",\"overrunTicks\":"));
+
+  printCommaIfNeeded(firstField);
+  Serial.print(F("\"overrunTicks\":"));
   Serial.print(frame.overrunCount);
+
   for (uint8_t i = 0; i < responsePinCount; ++i) {
-    Serial.print(F(",\"d"));
+    printCommaIfNeeded(firstField);
+    Serial.print(F("\"d"));
     Serial.print(_digitalPins[i]);
     Serial.print(F("\":{\"freq\":"));
     printDeciScaled((frame.frequencyMilliHz[i] + 50U) / 100U);
@@ -207,15 +219,60 @@ void FirmwareCli::respondDigital() {
     printDeciScaled(frame.dutyPermille[i]);
     Serial.print(F("}"));
   }
+}
+
+void FirmwareCli::appendEncoderFields(bool& firstField) {
+  printCommaIfNeeded(firstField);
+  Serial.print(F("\"encoder\":{\"direction\":\""));
+  Serial.print(_encoder.getDirection() ? F("UP") : F("DOWN"));
+  Serial.print(F("\",\"position\":"));
+  Serial.print(_encoder.getPosition());
+  Serial.print(F("}"));
+}
+
+void FirmwareCli::respondAnalog() {
+  bool firstField = true;
+  Serial.print(F("{"));
+  appendAnalogFields(firstField);
+  Serial.println(F("}"));
+}
+
+void FirmwareCli::respondDigital() {
+  DigitalInputMonitor::Frame frame;
+  _digitalMonitor.copyFrame(frame);
+  bool firstField = true;
+  Serial.print(F("{"));
+  appendDigitalFields(firstField, frame);
   Serial.println(F("}"));
 }
 
 void FirmwareCli::respondEncoder() {
-  Serial.print(F("{\"encoder\":{\"direction\":\""));
-  Serial.print(_encoder.getDirection() ? F("UP") : F("DOWN"));
-  Serial.print(F("\",\"position\":"));
-  Serial.print(_encoder.getPosition());
-  Serial.println(F("}}"));
+  bool firstField = true;
+  Serial.print(F("{"));
+  appendEncoderFields(firstField);
+  Serial.println(F("}"));
+}
+
+void FirmwareCli::respondAll() {
+  bool firstField = true;
+  DigitalInputMonitor::Frame frame;
+  _digitalMonitor.copyFrame(frame);
+
+  Serial.print(F("{"));
+  appendAnalogFields(firstField);
+  appendDigitalFields(firstField, frame);
+  appendEncoderFields(firstField);
+  Serial.println(F("}"));
+}
+
+void FirmwareCli::resetBoard() {
+  Serial.println(F("{\"status\":\"resetting\"}"));
+#if defined(__AVR__)
+  Serial.flush();
+  wdt_enable(WDTO_15MS);
+  while (true) {
+  }
+#endif
 }
 
 void FirmwareCli::handleCommand(char* cmd) {
@@ -246,6 +303,16 @@ void FirmwareCli::handleCommand(char* cmd) {
 
   if (strcmp(tokens[0], "encoder?") == 0) {
     respondEncoder();
+    return;
+  }
+
+  if (strcmp(tokens[0], "all?") == 0) {
+    respondAll();
+    return;
+  }
+
+  if (strcmp(tokens[0], "reset") == 0) {
+    resetBoard();
     return;
   }
 

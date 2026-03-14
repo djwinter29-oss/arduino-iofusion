@@ -58,12 +58,15 @@ This keeps interrupt latency low while still allowing useful higher-level behavi
 - Header: `apps/reference_firmware/include/firmware_cli.h`
 - Sources: `apps/reference_firmware/src/main.cpp`, `apps/reference_firmware/src/firmware_cli.cpp`
 - Role: composes the library into a serial-driven reference application.
+- Intent: supports both occasional manual diagnostics over Serial and low-rate host polling, such as a Python app requesting fresh telemetry about once per second.
 
 ## Configuration Model
 
 Each public component exposes a typed `Config` struct. That keeps wiring, timing, pull-up policy, and frequency choices explicit without hiding Arduino-specific details behind another abstraction layer.
 
 Convenience overloads remain available, but config structs are the preferred setup surface.
+
+Across the library, `begin()` is intended as a board-startup operation: configure the components in `setup()`, then let ISR and `loop()` code run against that fixed configuration during normal operation.
 
 To stay small and predictable on Uno-class targets, the library assumes these assignments are decided up front by the application. IOFusion does not do exhaustive runtime reconciliation of overlapping pin maps or timer ownership across modules, and it does not use dynamic allocation or runtime resource negotiation to resolve such conflicts. Non-overlapping wiring and timer planning are therefore caller responsibilities.
 
@@ -78,6 +81,8 @@ To stay small and predictable on Uno-class targets, the library assumes these as
    - `AnalogSampler::sampleIfDue()`
    - `DigitalInputMonitor::updateIfReady()`
    - CLI processing and serial responses
+
+The intended lifecycle is therefore: perform `begin()` calls during board startup, attach the Timer2 scheduler, and then treat the runtime as steady-state sampling/generation rather than a dynamic reconfiguration system.
 
 ## Concurrency Rules
 

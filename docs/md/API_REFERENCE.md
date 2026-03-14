@@ -13,6 +13,7 @@ This document describes the current public API contract and stability policy for
 - ISR-facing entry points such as `onTick()` must remain minimal.
 - Loop-facing methods perform heavier math, formatting, and deferred work.
 - Call update methods regularly from `loop()`; the library is not designed around long blocking sections.
+- `begin()` is a startup-time configuration API across the library. In the intended Arduino/Uno use case, components are configured once during board startup and then used with a steady runtime contract rather than repeatedly reconfigured during normal operation.
 - Pin maps and timer ownership are caller-managed. To keep the library lightweight on Uno-class targets, IOFusion does not attempt exhaustive runtime detection of overlapping pin assignments or cross-module timer conflicts.
 
 ## Stability Policy
@@ -59,9 +60,11 @@ Preferred setup:
 - `bool begin(const Config& config)`
   - Preferred setup entry point.
   - Applies both channel mapping and voltage-reference scaling.
+  - Intended to be called during board startup before normal runtime sampling begins.
   - Returns `false` if the channel list is invalid or `config.vref` cannot be represented as a positive millivolt value.
 - `bool begin(const uint8_t* channels, uint8_t count)`
   - Convenience overload for channel-only setup.
+  - Same startup-only intent as the typed `Config` overload.
   - Returns `false` if `count == 0` or `count > 6`.
 
 - `void onTick()`
@@ -103,8 +106,10 @@ Preferred setup:
 
 - `bool begin(const Config& config)`
   - Preferred setup entry point.
+  - Intended to be called during board startup before the Timer2-driven sampling loop is active.
 - `bool begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks=1000, float tickHz=1000.0f, bool usePullup=false)`
   - Convenience overload for positional setup.
+  - Same startup-only intent as the typed `Config` overload.
   - Returns `false` on invalid arguments or pin mapping failure.
   - `DigitalInputMonitor` is a sampled estimator: pulses shorter than one tick may be missed, and input frequencies above $\frac{\text{tickHz}}{2}$ alias.
   - Frequency resolution is $\frac{\text{tickHz}}{\text{windowTicks}}$ Hz.
@@ -157,8 +162,10 @@ Preferred setup:
 
 - `bool begin(const Config& config)`
   - Preferred setup entry point.
+  - Intended to be called during board startup before encoder generation begins.
 - `bool begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down, bool usePullup=false, bool activeHigh=true)`
   - Convenience overload for positional setup.
+  - Same startup-only intent as the typed `Config` overload.
   - Configures quadrature outputs (`pinA`, `pinB`) and direction inputs (`up`, `down`).
   - The caller is responsible for choosing non-overlapping pins; this API does not try to validate every cross-role wiring conflict at runtime.
   - Default control semantics are logic-driven, active-HIGH inputs.
@@ -191,8 +198,10 @@ Preferred setup:
 
 - `bool begin(const Config& config)`
   - Preferred setup entry point.
+  - Intended to be called during board startup before PWM output is enabled.
 - `bool begin(float freqHz)`
   - Convenience overload for direct frequency setup.
+  - Same startup-only intent as the typed `Config` overload.
   - The caller is responsible for ensuring Timer1 and pins D9/D10 are not already committed elsewhere in the application.
 
 - `void setDuty(uint8_t channel, float percent)`
@@ -217,6 +226,7 @@ Preferred setup:
 
 - `uint16_t begin(const Config& config)`
   - Preferred setup entry point.
+  - Intended to be called during board startup before the scheduler is attached to application work.
 - `uint16_t beginHz(float freqHz)`
   - Convenience overload for direct frequency setup.
   - Starts Timer2 near requested frequency.
@@ -239,22 +249,32 @@ Preferred setup:
 
 Source: `apps/reference_firmware/src/firmware_cli.cpp`
 
+Intended use:
+
+- The serial command surface is suitable both for occasional human-driven diagnostics and for low-rate host polling from a supervisory application.
+- In the normal reference-firmware use case, a host application such as Python polling about once per second is an appropriate operating model.
+- `digital?` is intended to serve both of those cases, which is why the reference firmware builds its response from one coherent published-frame snapshot.
+
 Supported commands (case-insensitive command token):
 
 - `analog?`
 - `digital?`
 - `encoder?`
+- `all?`
 - `pwm-freq <hz>`
 - `pwm-duty <ch> <pct>`
+- `reset`
 - `help`
 
 Response contract:
 
 - Success: `{"status":"ok"}` for mutating PWM commands.
+- `reset` returns `{"status":"resetting"}` immediately before the reference firmware requests a board reset.
 - Errors (stable keys): `{"error":"..."}`.
 - Unknown command: `{"error":"unknown command"}`.
 - `digital?` responses include `overrunTicks` so stale sampling windows are detectable from the reference firmware.
 - `digital?` responses also include `frameSeq` and `stale` so freshness is attached to the reported measurement frame itself.
+- `all?` returns one combined JSON object containing analog fields, the coherent digital frame fields, and the encoder object.
 
 Parser behavior notes:
 

@@ -34,9 +34,14 @@ class FirmwareCli {
   void processSerial();
 
  private:
+  void appendAnalogFields(bool& firstField);
+  void appendDigitalFields(bool& firstField, const DigitalInputMonitor::Frame& frame);
+  void appendEncoderFields(bool& firstField);
   void respondAnalog();
   void respondDigital();
   void respondEncoder();
+  void respondAll();
+  void resetBoard();
   void handleCommand(char* cmd);
   void dispatchCommand();
 

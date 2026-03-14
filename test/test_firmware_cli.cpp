@@ -51,6 +51,14 @@ void test_firmware_cli_commands() {
   runCmd(cli, "encoder?");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "encoder"));
 
+  runCmd(cli, "all?");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"a0\""));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"frameSeq\""));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"encoder\""));
+
+  runCmd(cli, "reset");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "resetting"));
+
   runCmd(cli, "pwm-freq");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "missing frequency"));
 
@@ -194,6 +202,12 @@ void test_firmware_cli_edge_cases() {
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"d2\""));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), ",\"d3\""));
 
+  runCmd(cli, "all?");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"a0\":1.251"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"a1\":3.754"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"frameSeq\":1"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"encoder\""));
+
   setDigitalPin(2, false);
   setDigitalPin(3, true);
   encoder.onTick();
@@ -242,6 +256,9 @@ void test_firmware_cli_internal_edges() {
 
   runCmd(cli, "   help   extra");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "help"));
+
+  runCmd(cli, "RESET extra");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "resetting"));
 
   Serial.clearOutput();
   advanceMillis(1);

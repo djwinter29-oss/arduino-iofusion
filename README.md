@@ -112,22 +112,39 @@ The library is intentionally Arduino-specific, but board wiring is left to the c
 
 IOFusion intentionally keeps configuration lightweight: it does not perform exhaustive runtime checks for overlapping pin assignments or timer-resource conflicts across modules. In the intended Arduino/Uno use case these mappings are chosen up front, remain effectively compile-time design decisions, and do not rely on dynamic allocation or late resource discovery. It is the caller's responsibility to ensure configured pins and timer users do not overlap.
 
+All `begin()` calls are intended to happen at board startup, typically in `setup()`. The normal runtime model is fixed-configuration operation rather than repeated reinitialization of modules after the system is already running.
+
 ## Command line interface
 
 The firmware exposes a simple serial command line for querying sensors and controlling PWM. Commands are ASCII and return JSON-like responses.
+It is intended both for occasional manual bring-up/debug use from a serial terminal and for low-rate host polling from a supervisory application. A Python app polling about once per second is a normal operating model for the reference firmware.
 
 Supported commands:
 
 - `analog?` — returns analog voltages for configured channels.
-- `digital?` — returns frequency and duty cycle for configured digital inputs.
+- `digital?` — returns one coherent published measurement frame for the configured digital inputs, including `frameSeq`, `stale`, `overrunTicks`, frequency, and duty cycle.
 - `encoder?` — returns encoder direction and position.
+- `all?` — returns analog fields, the coherent digital measurement frame, and encoder state in one response.
 - `pwm-freq <hz>` — sets Timer1 PWM frequency.
 - `pwm-duty <ch> <pct>` — sets PWM duty for channel 0 or 1.
+- `reset` — requests a board reset. On AVR targets the firmware acknowledges the command and then triggers a watchdog reset.
 - `help` — prints a short help string.
 
 #### Error reporting
 
 Initialization failures are reported as JSON errors on Serial (e.g., `{"error":"pwm init failed"}`) to aid diagnosis.
+
+#### Host polling helper
+
+For low-rate host polling, the repository includes [tools/poll_all.py](tools/poll_all.py), which sends `all?` in a loop and prints each response.
+
+Example:
+
+```bash
+python tools/poll_all.py /dev/ttyACM0 --baud 115200 --interval 1.0 --pretty
+```
+
+That matches the intended reference-firmware operating model of polling about once per second from a Python app.
 
 ## Use as a PlatformIO library
 
