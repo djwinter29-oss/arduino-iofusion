@@ -21,9 +21,12 @@ IOFusion uses semantic version tags to drive release automation.
 
 ## Normal Release Flow
 
-1. Sync `main` and confirm CI is green.
-2. Keep `library.json` on a placeholder version such as `0.0.0`.
-3. Create and push a semantic version tag.
+### Before tagging
+
+- Sync `main` and confirm CI is green.
+- Keep `library.json` on a placeholder version such as `0.0.0`.
+
+### Create and push the release tag
 
 ```bash
 git checkout main

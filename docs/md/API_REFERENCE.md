@@ -47,7 +47,7 @@ Any API explicitly marked experimental in docs or release notes may change betwe
 - Deprecations should be called out in release notes or docs before removal.
 - Prefer at least one minor release of deprecation runway before deleting stable surface area.
 
-## `AnalogSampler`
+## AnalogSampler
 
 Header: `lib/IOFusion/include/analog_sampler.h`
 
@@ -94,7 +94,7 @@ Implementation note:
 
 ---
 
-## `DigitalInputMonitor`
+## DigitalInputMonitor
 
 Header: `lib/IOFusion/include/digital_input_monitor.h`
 
@@ -150,7 +150,7 @@ Implementation note:
 
 ---
 
-## `EncoderGenerator`
+## EncoderGenerator
 
 Header: `lib/IOFusion/include/encoder_generator.h`
 
@@ -186,7 +186,7 @@ Preferred setup:
 
 ---
 
-## `Timer1PWM`
+## Timer1PWM
 
 Header: `lib/IOFusion/include/avr_timer1_pwm.h`
 
@@ -214,7 +214,7 @@ Preferred setup:
 
 ---
 
-## `Timer2Driver`
+## Timer2Driver
 
 Header: `lib/IOFusion/include/avr_timer2_driver.h`
 
