@@ -42,6 +42,9 @@ void test_firmware_cli_commands() {
   runCmd(cli, "pwm-freq abc");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
 
+  runCmd(cli, "pwm-freq 12x");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+
   runCmd(cli, "  PWM-FREQ   500   ");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
 
@@ -58,6 +61,9 @@ void test_firmware_cli_commands() {
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "missing duty parameters"));
 
   runCmd(cli, "pwm-duty x 50");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid channel"));
+
+  runCmd(cli, "pwm-duty 1x 50");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid channel"));
 
   runCmd(cli, "pwm-duty 3 50");
@@ -90,4 +96,67 @@ void test_firmware_cli_commands() {
   advanceMillis(100);
   cli.processSerial();
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "help"));
+}
+
+void test_firmware_cli_edge_cases() {
+  AnalogSampler analog;
+  DigitalInputMonitor digitalMonitor;
+  EncoderGenerator encoder;
+  Timer1PWM pwm;
+
+  const uint8_t aPins[] = {0, 1};
+  const uint8_t dPins[] = {2, 3};
+  TEST_ASSERT_TRUE(analog.begin(AnalogSampler::Config{aPins, 2, 5.0f}));
+  TEST_ASSERT_TRUE(
+      digitalMonitor.begin(DigitalInputMonitor::Config{dPins, 2, 2, 1000.0f, false}));
+  TEST_ASSERT_TRUE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
+
+  mockAnalogValues[0] = 256;
+  mockAnalogValues[1] = 768;
+  analog.onTick();
+  analog.sampleIfDue();
+
+  setDigitalPin(2, false);
+  setDigitalPin(3, true);
+  digitalMonitor.onTick();
+  setDigitalPin(2, true);
+  setDigitalPin(3, true);
+  digitalMonitor.onTick();
+  digitalMonitor.updateIfReady();
+
+  FirmwareCli cli(analog, digitalMonitor, encoder, pwm, FirmwareCli::Config{aPins, 2, dPins, 2});
+
+  Serial.clearOutput();
+  Serial.setInput("   \n");
+  cli.processSerial();
+  TEST_ASSERT_EQUAL_STRING("", Serial.getOutput().c_str());
+
+  Serial.clearOutput();
+  Serial.setInput("\n");
+  cli.processSerial();
+  TEST_ASSERT_EQUAL_STRING("", Serial.getOutput().c_str());
+
+  Serial.clearOutput();
+  Serial.setInput("analog?\r");
+  cli.processSerial();
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"a0\""));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), ",\"a1\""));
+
+  runCmd(cli, "digital?");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"d2\""));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), ",\"d3\""));
+
+  setDigitalPin(2, false);
+  setDigitalPin(3, true);
+  encoder.onTick();
+  runCmd(cli, "encoder?");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "DOWN"));
+
+  runCmd(cli, "pwm-duty 0 12.5 extra extra");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
+
+  Serial.clearOutput();
+  Serial.setInput("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefgh\n");
+  cli.processSerial();
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "unknown command"));
 }

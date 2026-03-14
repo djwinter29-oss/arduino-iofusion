@@ -9,6 +9,7 @@ void test_avr_timer2_driver_stubs() {
 
   TEST_ASSERT_EQUAL_UINT16(0, timer.beginHz(0.0f));
   TEST_ASSERT_EQUAL_UINT16(1, timer.begin(Timer2Driver::Config{1000.0f}));
+  TEST_ASSERT_EQUAL_UINT16(1, timer.beginHz(1000.0f));
   TEST_ASSERT_FALSE(timer.attachCallback(nullptr));
   TEST_ASSERT_TRUE(timer.attachCallback(timerCallbackA));
   TEST_ASSERT_FALSE(timer.attachCallback(timerCallbackA));
@@ -26,6 +27,8 @@ void test_avr_timer2_driver_stubs() {
 
   TEST_ASSERT_FALSE(other.begin(Timer2Driver::Config{1000.0f}));
   TEST_ASSERT_FALSE(other.attachCallback(timerCallbackE));
+  TEST_ASSERT_FALSE(other.detachCallback(nullptr));
+  TEST_ASSERT_FALSE(other.detachCallback(timerCallbackE));
   TEST_ASSERT_TRUE(timer.detachCallback(timerCallbackC));
   TEST_ASSERT_FALSE(timer.detachCallback(timerCallbackC));
 
@@ -46,4 +49,8 @@ void test_avr_timer2_driver_stubs() {
   TEST_ASSERT_TRUE(timer.attachCallback(timerCallbackA));
   Timer2Driver::handleInterrupt();
   TEST_ASSERT_EQUAL_UINT8(3, gTimerCallbackCountA);
+
+  timer.stop();
+  TEST_ASSERT_FALSE(timer.detachCallback(timerCallbackA));
+  other.stop();
 }

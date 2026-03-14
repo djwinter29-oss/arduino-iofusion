@@ -24,10 +24,15 @@ void resetTestState();
 void runCmd(FirmwareCli& cli, const char* cmd);
 
 void test_analog_sampler_branches();
+void test_analog_sampler_config_edges();
 void test_avr_timer1_pwm_stubs();
+void test_avr_timer1_pwm_config_edges();
 void test_avr_timer2_driver_stubs();
 void test_digital_input_monitor_branches();
+void test_digital_input_monitor_config_edges();
 void test_encoder_generator_branches();
+void test_encoder_generator_config_edges();
 void test_firmware_cli_commands();
+void test_firmware_cli_edge_cases();
 
 #endif
