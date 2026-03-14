@@ -47,6 +47,7 @@ void clearPorts() {
 
 void resetTestState() {
   mockMillis = 0;
+  for (int i = 0; i < 64; ++i) mockPinModes[i] = 0xFF;
   for (int i = 0; i < 16; ++i) mockAnalogValues[i] = 0;
   mockNullInputPort = -1;
   mockNullOutputPort = -1;

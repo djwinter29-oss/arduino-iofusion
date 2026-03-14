@@ -68,6 +68,7 @@ void test_digital_input_monitor_branches() {
 void test_digital_input_monitor_config_edges() {
   DigitalInputMonitor digitalMonitor;
   const uint8_t pins[] = {2};
+  const uint8_t mixedPins[] = {2, 64};
 
   TEST_ASSERT_FALSE(digitalMonitor.begin(DigitalInputMonitor::Config{nullptr, 1, 4, 1000.0f,
                                                                      false}));
@@ -75,6 +76,9 @@ void test_digital_input_monitor_config_edges() {
                                                                      false}));
   TEST_ASSERT_FALSE(digitalMonitor.begin(nullptr, 1, 4, 1000.0f, false));
   TEST_ASSERT_FALSE(digitalMonitor.begin(pins, 9, 4, 1000.0f, false));
+  TEST_ASSERT_FALSE(digitalMonitor.begin(mixedPins, 2, 4, 1000.0f, false));
+  TEST_ASSERT_EQUAL_UINT8(0, digitalMonitor.getPinCount());
+  TEST_ASSERT_EQUAL_HEX8(0xFF, mockPinModes[2]);
   mockNullInputPort = digitalPinToPort(2);
   TEST_ASSERT_FALSE(digitalMonitor.begin(pins, 1, 4, 1000.0f, false));
   mockNullInputPort = -1;
@@ -95,6 +99,11 @@ void test_digital_input_monitor_config_edges() {
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 100.0f, digitalMonitor.getDutyCycle(0));
   TEST_ASSERT_EQUAL_UINT32(500000, digitalMonitor.getFrequencyMilliHz(0));
   TEST_ASSERT_EQUAL_UINT16(1000, digitalMonitor.getDutyPermille(0));
+
+  const uint8_t laterBadPins[] = {3, 64};
+  TEST_ASSERT_FALSE(digitalMonitor.begin(laterBadPins, 2, 4, 1000.0f, false));
+  TEST_ASSERT_EQUAL_UINT8(1, digitalMonitor.getPinCount());
+  TEST_ASSERT_EQUAL_HEX8(0xFF, mockPinModes[3]);
 
   DigitalInputMonitorMirror& mirror = reinterpret_cast<DigitalInputMonitorMirror&>(digitalMonitor);
   mirror.pinCount = 1;

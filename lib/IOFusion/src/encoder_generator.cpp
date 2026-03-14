@@ -17,25 +17,41 @@ bool EncoderGenerator::begin(const Config& config) {
 bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down,
                              bool usePullup, bool activeHigh) {
   if (pinA == pinB) return false;
+  uint8_t portA = digitalPinToPort(pinA);
+  uint8_t portB = digitalPinToPort(pinB);
+  volatile uint8_t* portAOut = portOutputRegister(portA);
+  volatile uint8_t* portBOut = portOutputRegister(portB);
+  uint8_t maskA = digitalPinToBitMask(pinA);
+  uint8_t maskB = digitalPinToBitMask(pinB);
+  if (portA == NOT_A_PIN || portB == NOT_A_PIN || portAOut == nullptr || portBOut == nullptr ||
+      maskA == 0 || maskB == 0)
+    return false;
+
+  uint8_t portUp = digitalPinToPort(up);
+  uint8_t portDown = digitalPinToPort(down);
+  volatile uint8_t* upPortIn = portInputRegister(portUp);
+  volatile uint8_t* downPortIn = portInputRegister(portDown);
+  uint8_t upMask = digitalPinToBitMask(up);
+  uint8_t downMask = digitalPinToBitMask(down);
+  if (portUp == NOT_A_PIN || portDown == NOT_A_PIN || upPortIn == nullptr ||
+      downPortIn == nullptr || upMask == 0 || downMask == 0)
+    return false;
+
   _pinA = pinA;
   _pinB = pinB;
-  pinMode(_pinA, OUTPUT);
-  pinMode(_pinB, OUTPUT);
-  uint8_t portA = digitalPinToPort(_pinA);
-  uint8_t portB = digitalPinToPort(_pinB);
-  _portAOut = portOutputRegister(portA);
-  _portBOut = portOutputRegister(portB);
-  _maskA = digitalPinToBitMask(_pinA);
-  _maskB = digitalPinToBitMask(_pinB);
-  if (portA == NOT_A_PIN || portB == NOT_A_PIN || _portAOut == nullptr || _portBOut == nullptr ||
-      _maskA == 0 || _maskB == 0)
-    return false;
-  *_portAOut &= ~_maskA;
-  *_portBOut &= ~_maskB;
-  _state = 0;
-
+  _portAOut = portAOut;
+  _portBOut = portBOut;
+  _maskA = maskA;
+  _maskB = maskB;
   _pinUp = up;
   _pinDown = down;
+  _upPortIn = upPortIn;
+  _downPortIn = downPortIn;
+  _upMask = upMask;
+  _downMask = downMask;
+
+  pinMode(_pinA, OUTPUT);
+  pinMode(_pinB, OUTPUT);
   if (usePullup) {
     pinMode(_pinUp, INPUT_PULLUP);
     pinMode(_pinDown, INPUT_PULLUP);
@@ -43,15 +59,10 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
     pinMode(_pinUp, INPUT);
     pinMode(_pinDown, INPUT);
   }
-  uint8_t portUp = digitalPinToPort(_pinUp);
-  uint8_t portDown = digitalPinToPort(_pinDown);
-  _upPortIn = portInputRegister(portUp);
-  _downPortIn = portInputRegister(portDown);
-  _upMask = digitalPinToBitMask(_pinUp);
-  _downMask = digitalPinToBitMask(_pinDown);
-  if (portUp == NOT_A_PIN || portDown == NOT_A_PIN || _upPortIn == nullptr ||
-      _downPortIn == nullptr || _upMask == 0 || _downMask == 0)
-    return false;
+
+  *_portAOut &= ~_maskA;
+  *_portBOut &= ~_maskB;
+  _state = 0;
   _activeHigh = activeHigh;
   noInterrupts();
   _position = 0;

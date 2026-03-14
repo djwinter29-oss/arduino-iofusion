@@ -59,6 +59,7 @@ Preferred setup:
 - `bool begin(const Config& config)`
   - Preferred setup entry point.
   - Applies both channel mapping and voltage-reference scaling.
+  - Returns `false` if the channel list is invalid or `config.vref` cannot be represented as a positive millivolt value.
 - `bool begin(const uint8_t* channels, uint8_t count)`
   - Convenience overload for channel-only setup.
   - Returns `false` if `count == 0` or `count > 6`.

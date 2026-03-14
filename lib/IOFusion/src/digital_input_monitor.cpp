@@ -27,19 +27,32 @@ bool DigitalInputMonitor::begin(const uint8_t* pins, uint8_t count, uint16_t win
   if (pins == nullptr) return false;
   if (count == 0 || count > MAX_PINS) return false;
   if (windowTicks == 0 || tickMilliHz == 0) return false;
+  uint8_t newPins[MAX_PINS];
+  volatile uint8_t* newPinPortIn[MAX_PINS];
+  uint8_t newPinMask[MAX_PINS];
+
+  for (uint8_t i = 0; i < count; ++i) {
+    uint8_t pin = pins[i];
+    uint8_t port = digitalPinToPort(pin);
+    volatile uint8_t* portIn = portInputRegister(port);
+    uint8_t mask = digitalPinToBitMask(pin);
+    if (port == NOT_A_PIN || portIn == nullptr || mask == 0) return false;
+    newPins[i] = pin;
+    newPinPortIn[i] = portIn;
+    newPinMask[i] = mask;
+  }
+
   _pinCount = count;
   _windowTicks = windowTicks;
   _tickMilliHz = tickMilliHz;
   for (uint8_t i = 0; i < _pinCount; ++i) {
-    _pins[i] = pins[i];
+    _pins[i] = newPins[i];
+    _pinPortIn[i] = newPinPortIn[i];
+    _pinMask[i] = newPinMask[i];
     if (usePullup)
       pinMode(_pins[i], INPUT_PULLUP);
     else
       pinMode(_pins[i], INPUT);
-    uint8_t port = digitalPinToPort(_pins[i]);
-    _pinPortIn[i] = portInputRegister(port);
-    _pinMask[i] = digitalPinToBitMask(_pins[i]);
-    if (port == NOT_A_PIN || _pinPortIn[i] == nullptr || _pinMask[i] == 0) return false;
     _edgeCnt[i] = 0;
     _highCnt[i] = 0;
     _lastState[i] = readPinState(_pinPortIn[i], _pinMask[i]);

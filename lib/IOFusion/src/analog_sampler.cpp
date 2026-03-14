@@ -9,6 +9,14 @@ uint16_t scaleAdcToMillivolts(int adcValue, uint16_t vrefMillivolts) {
   return static_cast<uint16_t>(scaled);
 }
 
+bool tryConvertVrefToMillivolts(float vref, uint16_t& millivoltsOut) {
+  if (vref <= 0.0f) return false;
+  uint32_t millivolts = static_cast<uint32_t>((vref * 1000.0f) + 0.5f);
+  if (millivolts == 0 || millivolts > 65535UL) return false;
+  millivoltsOut = static_cast<uint16_t>(millivolts);
+  return true;
+}
+
 }  // namespace
 
 AnalogSampler::AnalogSampler() {
@@ -17,8 +25,10 @@ AnalogSampler::AnalogSampler() {
 
 bool AnalogSampler::begin(const Config& config) {
   if (config.channels == nullptr && config.channelCount != 0) return false;
+  uint16_t vrefMillivolts = 0;
+  if (!tryConvertVrefToMillivolts(config.vref, vrefMillivolts)) return false;
   if (!begin(config.channels, config.channelCount)) return false;
-  setVref(config.vref);
+  setVrefMillivolts(vrefMillivolts);
   return true;
 }
 
@@ -75,10 +85,9 @@ uint16_t AnalogSampler::getMillivolts(uint8_t idx) const {
 }
 
 void AnalogSampler::setVref(float vref) {
-  if (vref <= 0.0f) return;
-  uint32_t millivolts = static_cast<uint32_t>((vref * 1000.0f) + 0.5f);
-  if (millivolts > 65535UL) return;
-  setVrefMillivolts(static_cast<uint16_t>(millivolts));
+  uint16_t millivolts = 0;
+  if (!tryConvertVrefToMillivolts(vref, millivolts)) return;
+  setVrefMillivolts(millivolts);
 }
 
 void AnalogSampler::setVrefMillivolts(uint16_t vrefMillivolts) {

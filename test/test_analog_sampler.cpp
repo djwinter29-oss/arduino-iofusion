@@ -36,6 +36,10 @@ void test_analog_sampler_config_edges() {
 
   TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{nullptr, 1, 5.0f}));
   TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{nullptr, 0, 5.0f}));
+  TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{validChannels, 2, 0.0f}));
+  TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{validChannels, 2, -1.0f}));
+  TEST_ASSERT_FALSE(sampler.begin(AnalogSampler::Config{validChannels, 2, 70000.0f}));
+  TEST_ASSERT_EQUAL_UINT8(0, sampler.getChannelCount());
   TEST_ASSERT_FALSE(sampler.begin(nullptr, 2));
   TEST_ASSERT_FALSE(sampler.begin(validChannels, 7));
   TEST_ASSERT_FALSE(sampler.begin(invalidChannels, 2));

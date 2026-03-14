@@ -103,6 +103,13 @@ void test_encoder_generator_config_edges() {
   mockNullInputPort = digitalPinToPort(32);
   TEST_ASSERT_FALSE(separatedPorts.begin(EncoderGenerator::Config{8, 16, 24, 32, false, true}));
   mockNullInputPort = -1;
+  mockPortOut[digitalPinToPort(8)] = 0xAA;
+  mockPortOut[digitalPinToPort(16)] = 0x55;
+  TEST_ASSERT_FALSE(separatedPorts.begin(EncoderGenerator::Config{8, 16, 24, 64, false, true}));
+  TEST_ASSERT_EQUAL_HEX8(0xFF, mockPinModes[8]);
+  TEST_ASSERT_EQUAL_HEX8(0xFF, mockPinModes[16]);
+  TEST_ASSERT_EQUAL_HEX8(0xAA, mockPortOut[digitalPinToPort(8)]);
+  TEST_ASSERT_EQUAL_HEX8(0x55, mockPortOut[digitalPinToPort(16)]);
   mockZeroMaskPin = 2;
   TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
   mockZeroMaskPin = -1;
