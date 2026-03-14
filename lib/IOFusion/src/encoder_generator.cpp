@@ -9,6 +9,11 @@ bool readControlState(volatile uint8_t* portIn, uint8_t mask, bool activeHigh) {
 
 }  // namespace
 
+bool EncoderGenerator::begin(const Config& config) {
+  return begin(config.pinA, config.pinB, config.upPin, config.downPin, config.usePullup,
+               config.activeHigh);
+}
+
 bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down,
                              bool usePullup, bool activeHigh) {
   if (pinA == pinB) return false;

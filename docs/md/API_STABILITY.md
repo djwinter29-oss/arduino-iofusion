@@ -15,7 +15,7 @@ Public headers under `lib/IOFusion/include/` are considered stable unless explic
 
 ### Internal API
 
-Implementation details under `lib/IOFusion/src/` and app wiring under `src/` are internal.
+Implementation details under `lib/IOFusion/src/` and reference firmware wiring under `apps/reference_firmware/` are internal.
 
 - May change without notice.
 - Not intended as integration surface for downstream users.

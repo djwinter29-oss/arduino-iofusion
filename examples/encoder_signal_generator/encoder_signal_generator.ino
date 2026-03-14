@@ -8,6 +8,8 @@ constexpr float kTickHz = 5000.0f;
 
 Timer2Driver timer2;
 EncoderGenerator encoder;
+const EncoderGenerator::Config kEncoderConfig = {8, 11, 12, 13, true, false};
+const Timer2Driver::Config kTimerConfig(kTickHz);
 
 // Output A/B pins: 8,11
 // Control pins: up=12, down=13 (INPUT_PULLUP)
@@ -20,12 +22,12 @@ void setup() {
   Serial.begin(115200);
   delay(100);
 
-  if (!encoder.begin(8, 11, 12, 13, true, false)) {
+  if (!encoder.begin(kEncoderConfig)) {
     Serial.println(F("{\"error\":\"encoder init failed\"}"));
     return;
   }
 
-  if (timer2.beginHz(kTickHz) == 0) {
+  if (timer2.begin(kTimerConfig) == 0) {
     Serial.println(F("{\"error\":\"timer2 init failed\"}"));
     return;
   }

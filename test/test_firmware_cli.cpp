@@ -17,11 +17,12 @@ void test_firmware_cli_commands() {
 
   const uint8_t aPins[] = {0};
   const uint8_t dPins[] = {2};
-  TEST_ASSERT_TRUE(analog.begin(aPins, 1));
-  TEST_ASSERT_TRUE(digitalMonitor.begin(dPins, 1, 4, 1000.0f, false));
-  TEST_ASSERT_TRUE(encoder.begin(9, 10, 2, 3));
+  TEST_ASSERT_TRUE(analog.begin(AnalogSampler::Config{aPins, 1, 5.0f}));
+  TEST_ASSERT_TRUE(
+      digitalMonitor.begin(DigitalInputMonitor::Config{dPins, 1, 4, 1000.0f, false}));
+  TEST_ASSERT_TRUE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
 
-  FirmwareCli cli(analog, digitalMonitor, encoder, pwm, aPins, 1, dPins, 1);
+  FirmwareCli cli(analog, digitalMonitor, encoder, pwm, FirmwareCli::Config{aPins, 1, dPins, 1});
 
   runCmd(cli, "help");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "help"));

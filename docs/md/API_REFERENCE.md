@@ -20,10 +20,17 @@ This document describes the current public API contract for IOFusion.
 
 Header: `lib/IOFusion/include/analog_sampler.h`
 
+Preferred setup:
+
+- `struct AnalogSampler::Config { const uint8_t* channels; uint8_t channelCount; float vref; }`
+
 ### Methods
 
+- `bool begin(const Config& config)`
+  - Preferred setup entry point.
+  - Applies both channel mapping and voltage-reference scaling.
 - `bool begin(const uint8_t* channels, uint8_t count)`
-  - Copies analog channel IDs (`0..5`) into internal storage.
+  - Convenience overload for channel-only setup.
   - Returns `false` if `count == 0` or `count > 6`.
 
 - `void onTick()`
@@ -47,10 +54,16 @@ Header: `lib/IOFusion/include/analog_sampler.h`
 
 Header: `lib/IOFusion/include/digital_input_monitor.h`
 
+Preferred setup:
+
+- `struct DigitalInputMonitor::Config { const uint8_t* pins; uint8_t pinCount; uint16_t windowTicks; float tickHz; bool usePullup; }`
+
 ### Methods
 
+- `bool begin(const Config& config)`
+  - Preferred setup entry point.
 - `bool begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks=1000, float tickHz=1000.0f, bool usePullup=false)`
-  - Initializes digital monitoring.
+  - Convenience overload for positional setup.
   - Returns `false` on invalid arguments or pin mapping failure.
   - `DigitalInputMonitor` is a sampled estimator: pulses shorter than one tick may be missed, and input frequencies above $\frac{\text{tickHz}}{2}$ alias.
   - Frequency resolution is $\frac{\text{tickHz}}{\text{windowTicks}}$ Hz.
@@ -74,9 +87,16 @@ Header: `lib/IOFusion/include/digital_input_monitor.h`
 
 Header: `lib/IOFusion/include/encoder_generator.h`
 
+Preferred setup:
+
+- `struct EncoderGenerator::Config { uint8_t pinA; uint8_t pinB; uint8_t upPin; uint8_t downPin; bool usePullup; bool activeHigh; }`
+
 ### Methods
 
+- `bool begin(const Config& config)`
+  - Preferred setup entry point.
 - `bool begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down, bool usePullup=false, bool activeHigh=true)`
+  - Convenience overload for positional setup.
   - Configures quadrature outputs (`pinA`, `pinB`) and direction inputs (`up`, `down`).
   - Default control semantics are logic-driven, active-HIGH inputs.
   - For direct switch-to-ground wiring, use `usePullup=true` and `activeHigh=false`.
@@ -97,10 +117,16 @@ Header: `lib/IOFusion/include/encoder_generator.h`
 
 Header: `lib/IOFusion/include/avr_timer1_pwm.h`
 
+Preferred setup:
+
+- `struct Timer1PWM::Config { float frequencyHz; }`
+
 ### Methods
 
+- `bool begin(const Config& config)`
+  - Preferred setup entry point.
 - `bool begin(float freqHz)`
-  - Configures Timer1 PWM frequency.
+  - Convenience overload for direct frequency setup.
 
 - `void setDuty(uint8_t channel, float percent)`
   - Channel `0`/`1`, duty in `0..100` (input is clamped).
@@ -116,9 +142,16 @@ Header: `lib/IOFusion/include/avr_timer1_pwm.h`
 
 Header: `lib/IOFusion/include/avr_timer2_driver.h`
 
+Preferred setup:
+
+- `struct Timer2Driver::Config { float frequencyHz; }`
+
 ### Methods
 
+- `uint16_t begin(const Config& config)`
+  - Preferred setup entry point.
 - `uint16_t beginHz(float freqHz)`
+  - Convenience overload for direct frequency setup.
   - Starts Timer2 near requested frequency.
   - Returns the OCR value used on AVR, or `0` on invalid input / when Timer2 is already owned by another `Timer2Driver` instance.
   - Clears any previously registered callbacks for that driver instance.
@@ -132,9 +165,9 @@ Header: `lib/IOFusion/include/avr_timer2_driver.h`
 
 ---
 
-## `FirmwareCli` command surface (firmware serial)
+## Reference firmware command surface (non-library)
 
-Source: `src/firmware_cli.cpp`
+Source: `apps/reference_firmware/src/firmware_cli.cpp`
 
 Supported commands (case-insensitive command token):
 

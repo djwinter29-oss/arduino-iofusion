@@ -13,6 +13,8 @@ IOFusion is a small Arduino-focused component set for **deterministic timing**, 
 
 This design helps keep interrupt latency low and behavior predictable.
 
+The library surface is centered on components under `lib/IOFusion/`. Repository-level firmware under `apps/reference_firmware/` exists as a reference composition, not as the primary integration surface.
+
 ---
 
 ## 2) Module Overview
@@ -48,10 +50,17 @@ This design helps keep interrupt latency low and behavior predictable.
 - Configures Timer1 PWM output (Uno OC1A/OC1B, pins 9/10).
 - Controls output frequency and per-channel duty cycle.
 
-### FirmwareCli + app wiring (`src/firmware_cli.*`, `src/main.cpp`)
+### Config Structs (public library setup model)
 
-- Integrates all modules into a serial-controlled firmware.
+- Each public component exposes a `Config` struct for pin and timing setup.
+- This keeps Arduino-specific pin wiring explicit without introducing a separate HAL abstraction.
+- Convenience overloads remain available, but config objects are the preferred library-facing API.
+
+### Reference firmware (`apps/reference_firmware/*`)
+
+- Integrates all modules into a serial-controlled example firmware.
 - Provides text commands for query/control.
+- Is intentionally outside the library source tree so the library remains the primary product boundary.
 
 ---
 
@@ -88,7 +97,7 @@ This flow preserves deterministic sampling while avoiding expensive ISR operatio
 
 For practical use, keep target input frequencies comfortably below Nyquist. A conservative guidance point is $f_{in} \le \frac{\text{tickHz}}{4}$ when you care about both frequency and duty-cycle fidelity.
 
-The default firmware wiring in [src/main.cpp](src/main.cpp) uses `tickHz = 10000` and `windowTicks = 500`, so the measurement window is 50 ms, frequency resolution is about 20 Hz, and duty resolution is about 0.2%. Higher-frequency or narrow-pulse measurements should move to hardware capture or dedicated edge interrupts.
+The default reference firmware wiring in [apps/reference_firmware/src/main.cpp](apps/reference_firmware/src/main.cpp) uses `tickHz = 10000` and `windowTicks = 500`, so the measurement window is 50 ms, frequency resolution is about 20 Hz, and duty resolution is about 0.2%. Higher-frequency or narrow-pulse measurements should move to hardware capture or dedicated edge interrupts.
 
 ---
 
@@ -97,8 +106,9 @@ The default firmware wiring in [src/main.cpp](src/main.cpp) uses `tickHz = 10000
 - Core library code:
   - `lib/IOFusion/include`
   - `lib/IOFusion/src`
-- Firmware app:
-  - `src/`
+- Reference firmware:
+  - `apps/reference_firmware/include`
+  - `apps/reference_firmware/src`
 - Tests:
   - `test/`
 - CI/docs tooling:

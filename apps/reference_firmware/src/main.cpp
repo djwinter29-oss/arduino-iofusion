@@ -9,7 +9,7 @@
 #include "version_info.h"
 
 namespace {
-constexpr float kTimerTickHz = 10000.0f;  // Timer2 tick frequency
+constexpr float kTimerTickHz = 10000.0f;
 
 Timer2Driver timer2;
 AnalogSampler analogSampler;
@@ -25,12 +25,40 @@ bool timerOk = false;
 
 const uint8_t kAnalogPins[] = {0, 1, 2, 3, 4, 5};
 const uint8_t kDigitalPins[] = {2, 3, 8, 11, 12, 13};
-// pwm 9,10
 
-FirmwareCli firmwareCli(analogSampler, digitalInputMonitor, encoder, pwm, kAnalogPins,
-                        static_cast<uint8_t>(sizeof(kAnalogPins) / sizeof(kAnalogPins[0])),
-                        kDigitalPins,
-                        static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])));
+const AnalogSampler::Config kAnalogConfig = {
+    kAnalogPins,
+    static_cast<uint8_t>(sizeof(kAnalogPins) / sizeof(kAnalogPins[0])),
+    5.0f,
+};
+
+const DigitalInputMonitor::Config kDigitalMonitorConfig = {
+    kDigitalPins,
+    static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])),
+    500,
+    kTimerTickHz,
+    true,
+};
+
+const EncoderGenerator::Config kEncoderConfig = {
+    4,
+    5,
+    6,
+    7,
+    true,
+    false,
+};
+
+const Timer1PWM::Config kPwmConfig(100.0f);
+const Timer2Driver::Config kTimerConfig(kTimerTickHz);
+const FirmwareCli::Config kCliConfig = {
+    kAnalogPins,
+    static_cast<uint8_t>(sizeof(kAnalogPins) / sizeof(kAnalogPins[0])),
+    kDigitalPins,
+    static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])),
+};
+
+FirmwareCli firmwareCli(analogSampler, digitalInputMonitor, encoder, pwm, kCliConfig);
 
 void timerTickHandler() {
   if (analogOk) analogSampler.onTick();
@@ -51,20 +79,16 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  analogSampler.begin(kAnalogPins,
-                      static_cast<uint8_t>(sizeof(kAnalogPins) / sizeof(kAnalogPins[0])));
-  analogOk = analogSampler.getChannelCount() > 0;
+  analogOk = analogSampler.begin(kAnalogConfig);
   if (!analogOk) Serial.println(F("{\"error\":\"analog init failed\"}"));
 
-  digitalMonitorOk = digitalInputMonitor.begin(
-      kDigitalPins, static_cast<uint8_t>(sizeof(kDigitalPins) / sizeof(kDigitalPins[0])), 500,
-      kTimerTickHz, true);
+  digitalMonitorOk = digitalInputMonitor.begin(kDigitalMonitorConfig);
   if (!digitalMonitorOk) Serial.println(F("{\"error\":\"digital init failed\"}"));
 
-  encoderOk = encoder.begin(4, 5, 6, 7, true, false);
+  encoderOk = encoder.begin(kEncoderConfig);
   if (!encoderOk) Serial.println(F("{\"error\":\"encoder init failed\"}"));
 
-  pwmOk = pwm.begin(100.0f);
+  pwmOk = pwm.begin(kPwmConfig);
   if (!pwmOk) {
     Serial.println(F("{\"error\":\"pwm init failed\"}"));
   } else {
@@ -72,7 +96,7 @@ void setup() {
     pwm.setDuty(1, 25.0f);
   }
 
-  timerOk = timer2.beginHz(kTimerTickHz) > 0;
+  timerOk = timer2.begin(kTimerConfig) > 0;
   if (!timerOk) {
     Serial.println(F("{\"error\":\"timer2 init failed\"}"));
   } else {

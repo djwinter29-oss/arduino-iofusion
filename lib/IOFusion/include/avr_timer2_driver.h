@@ -1,5 +1,5 @@
-// Simple Timer2 driver for AVR/Arduino
-// Provides periodic interrupts on Timer2 and a tiny encoder signal generator.
+/// @file avr_timer2_driver.h
+/// @brief AVR Timer2 tick driver for Uno-class Arduino targets.
 #ifndef IOFUSION_AVR_TIMER2_DRIVER_H
 #define IOFUSION_AVR_TIMER2_DRIVER_H
 
@@ -7,22 +7,37 @@
 
 typedef void (*Timer2Callback)();
 
+/// @brief Provides a periodic Timer2 interrupt source and callback dispatch table.
 class Timer2Driver {
  public:
+  /// @brief Startup configuration for Timer2Driver.
+  struct Config {
+    /// Requested tick frequency in hertz.
+    float frequencyHz = 0.0f;
+
+    Config() = default;
+    explicit Config(float frequencyHzIn) : frequencyHz(frequencyHzIn) {}
+  };
+
+  /// @brief Constructs an inactive Timer2 driver.
   Timer2Driver();
-  // Start timer at approximate frequency in Hz. Returns actual OCR value used.
+
+  /// @brief Starts Timer2 from a typed configuration object.
+  /// @param config Requested Timer2 frequency.
+  /// @return AVR OCR value used for the configured timer, or 0 on failure.
+  uint16_t begin(const Config& config);
+
+  /// @brief Convenience overload that forwards to @ref begin(const Config&).
   uint16_t beginHz(float freqHz);
-  // Stop timer and disable interrupt
+
+  /// @brief Stops Timer2 and disables interrupt dispatch.
   void stop();
 
-  // Attach a callback that will be called from the ISR context.
-  // Keep the callback short; heavy work should be deferred to loop().
-  // Returns false for null callbacks, duplicates, overflow, or inactive drivers.
+  /// @brief Registers a callback that executes from ISR context.
   bool attachCallback(Timer2Callback cb);
-  // Detach a specific callback previously attached. Pass the same function pointer.
-  // Returns false if the callback is not currently registered.
+  /// @brief Removes a previously registered ISR callback.
   bool detachCallback(Timer2Callback cb);
-  // ISR entry point
+  /// @brief ISR entry point used by the Timer2 compare-match vector.
   static void handleInterrupt();
 
  private:

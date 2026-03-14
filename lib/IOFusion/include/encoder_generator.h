@@ -1,21 +1,56 @@
-// Simple quadrature encoder signal generator
+/// @file encoder_generator.h
+/// @brief Quadrature output generator controlled by digital direction inputs.
 #ifndef IOFUSION_ENCODER_GENERATOR_H
 #define IOFUSION_ENCODER_GENERATOR_H
 
 #include <Arduino.h>
 
+/// @brief Generates quadrature A/B output transitions from up/down control signals.
 class EncoderGenerator {
  public:
-  // Initialize generator pins and control inputs. Returns true on success.
-  // By default the control inputs are logic-driven, active-HIGH inputs.
+  /// @brief Startup configuration for EncoderGenerator.
+  struct Config {
+    /// Quadrature channel A output pin.
+    uint8_t pinA = 255;
+    /// Quadrature channel B output pin.
+    uint8_t pinB = 255;
+    /// Direction control input that advances the generated waveform.
+    uint8_t upPin = 255;
+    /// Direction control input that reverses the generated waveform.
+    uint8_t downPin = 255;
+    /// Enables INPUT_PULLUP on the direction inputs when true.
+    bool usePullup = false;
+    /// Interprets asserted direction inputs as HIGH when true, LOW when false.
+    bool activeHigh = true;
+
+    Config() = default;
+    Config(uint8_t pinAIn, uint8_t pinBIn, uint8_t upPinIn, uint8_t downPinIn,
+           bool usePullupIn, bool activeHighIn)
+        : pinA(pinAIn),
+          pinB(pinBIn),
+          upPin(upPinIn),
+          downPin(downPinIn),
+          usePullup(usePullupIn),
+          activeHigh(activeHighIn) {}
+  };
+
+  /// @brief Configures output and control pins from a typed configuration object.
+  /// @param config Pin and polarity settings for the generator.
+  /// @return `true` when the configuration is valid for the current target.
+  bool begin(const Config& config);
+
+  /// @brief Convenience overload that forwards to @ref begin(const Config&).
   bool begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down, bool usePullup = false,
              bool activeHigh = true);
-  // Called from ISR to advance the quadrature state and write outputs.
+
+  /// @brief Advances the generated waveform by one step from ISR context.
   void onTick();
 
+  /// @brief Returns the generated logical position counter.
   int32_t getPosition();
+  /// @brief Returns the last generated direction.
   bool getDirection();
-  // Reset position to initial state (0)
+  /// @brief Resets waveform state and logical position to the idle state.
   void reset();
 
  private:

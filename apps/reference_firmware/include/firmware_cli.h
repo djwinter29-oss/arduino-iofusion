@@ -10,6 +10,23 @@
 
 class FirmwareCli {
  public:
+  struct Config {
+    const uint8_t* analogPins = nullptr;
+    uint8_t analogCount = 0;
+    const uint8_t* digitalPins = nullptr;
+    uint8_t digitalCount = 0;
+
+    Config() = default;
+    Config(const uint8_t* analogPinsIn, uint8_t analogCountIn, const uint8_t* digitalPinsIn,
+           uint8_t digitalCountIn)
+        : analogPins(analogPinsIn),
+          analogCount(analogCountIn),
+          digitalPins(digitalPinsIn),
+          digitalCount(digitalCountIn) {}
+  };
+
+  FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor,
+              EncoderGenerator& encoder, Timer1PWM& pwm, const Config& config);
   FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor,
               EncoderGenerator& encoder, Timer1PWM& pwm, const uint8_t* analogPins,
               uint8_t analogCount, const uint8_t* digitalPins, uint8_t digitalCount);

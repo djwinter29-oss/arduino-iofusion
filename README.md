@@ -33,7 +33,7 @@
  pio device monitor -b 115200
 ```
 
-Basic PlatformIO project targeting the Arduino Uno (ATmega328P).
+Arduino-focused library package with a reference firmware for Arduino Uno-class targets.
 
 ## IOFusion design
 
@@ -56,7 +56,7 @@ IOFusion is a small set of hardware helpers focused on deterministic, timer-driv
 
 For reliable square-wave style measurements, keep the input frequency comfortably below Nyquist; as a practical rule, target $f_{in} \le \frac{\text{tickHz}}{4}$ if both duty and edge count matter. For higher-frequency or narrow-pulse measurements, use hardware capture or edge interrupts instead of `DigitalInputMonitor`.
 
-In the default firmware configuration, `DigitalInputMonitor` runs at 10 kHz with a 500-tick window ([src/main.cpp](src/main.cpp)). That yields a 50 ms measurement window, about 20 Hz frequency resolution, and about 0.2% duty resolution, with best results on signals well below 2.5 kHz.
+In the default reference firmware configuration, `DigitalInputMonitor` runs at 10 kHz with a 500-tick window ([apps/reference_firmware/src/main.cpp](apps/reference_firmware/src/main.cpp)). That yields a 50 ms measurement window, about 20 Hz frequency resolution, and about 0.2% duty resolution, with best results on signals well below 2.5 kHz.
 
 ### Encoder generator semantics
 
@@ -103,8 +103,12 @@ For `DigitalInputMonitor`, also size `tickHz` and `windowTicks` around the actua
 
 - Library headers: [lib/IOFusion/include](lib/IOFusion/include)
 - Library sources: [lib/IOFusion/src](lib/IOFusion/src)
-- Firmware entry: [src/main.cpp](src/main.cpp)
-- Command line interface: [src/firmware_cli.h](src/firmware_cli.h) and [src/firmware_cli.cpp](src/firmware_cli.cpp)
+- Reference firmware entry: [apps/reference_firmware/src/main.cpp](apps/reference_firmware/src/main.cpp)
+- Reference firmware CLI: [apps/reference_firmware/include/firmware_cli.h](apps/reference_firmware/include/firmware_cli.h) and [apps/reference_firmware/src/firmware_cli.cpp](apps/reference_firmware/src/firmware_cli.cpp)
+
+### Configuration model
+
+The library is intentionally Arduino-specific, but board wiring is left to the caller. Public setup APIs now provide typed `Config` structs so pin assignments, timing parameters, pull-up policy, and frequency selection stay explicit and readable at the call site.
 
 ## Command line interface
 

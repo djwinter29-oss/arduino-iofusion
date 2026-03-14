@@ -1,14 +1,15 @@
 # Doxyfile for arduino-iofusion / IOFusion
 
 PROJECT_NAME           = "IOFusion"
-PROJECT_BRIEF          = "Deterministic timer-driven sampling & signal generation helpers for Arduino"
+PROJECT_BRIEF          = "Arduino-focused library for deterministic sampling and signal generation"
 OUTPUT_DIRECTORY       = docs/doxygen
 CREATE_SUBDIRS         = NO
 
 # Inputs
-INPUT                  = lib/IOFusion/include lib/IOFusion/src src
+INPUT                  = lib/IOFusion/include lib/IOFusion/src
 FILE_PATTERNS          = *.h *.hpp *.c *.cpp
 RECURSIVE              = YES
+EXCLUDE_PATTERNS       = */test/* */examples/* */apps/reference_firmware/*
 EXTRACT_ALL            = YES
 EXTRACT_PRIVATE        = NO
 EXTRACT_STATIC         = YES

@@ -10,6 +10,10 @@ Timer2Driver::Timer2Driver() {
   resetCallbacks();
 }
 
+uint16_t Timer2Driver::begin(const Config& config) {
+  return beginHz(config.frequencyHz);
+}
+
 uint16_t Timer2Driver::beginHz(float freqHz) {
   if (freqHz <= 0.0f) return 0;
   noInterrupts();
@@ -108,6 +112,10 @@ Timer2Driver* volatile Timer2Driver::_activeDriver = nullptr;
 
 Timer2Driver::Timer2Driver() {
   resetCallbacks();
+}
+
+uint16_t Timer2Driver::begin(const Config& config) {
+  return beginHz(config.frequencyHz);
 }
 
 uint16_t Timer2Driver::beginHz(float freqHz) {

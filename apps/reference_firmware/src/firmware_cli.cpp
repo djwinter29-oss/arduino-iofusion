@@ -64,7 +64,7 @@ bool handlePwmFreq(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
     printError(F("invalid frequency"));
     return true;
   }
-  if (pwm.begin(freq)) {
+  if (pwm.begin(Timer1PWM::Config{freq})) {
     printStatusOk();
   } else {
     printError(F("unable to set frequency"));
@@ -93,6 +93,11 @@ bool handlePwmDuty(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
 }
 
 }  // namespace
+
+FirmwareCli::FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor,
+                         EncoderGenerator& encoder, Timer1PWM& pwm, const Config& config)
+    : FirmwareCli(analog, digitalMonitor, encoder, pwm, config.analogPins, config.analogCount,
+                  config.digitalPins, config.digitalCount) {}
 
 FirmwareCli::FirmwareCli(AnalogSampler& analog, DigitalInputMonitor& digitalMonitor,
                          EncoderGenerator& encoder, Timer1PWM& pwm,

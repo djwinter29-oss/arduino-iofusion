@@ -56,13 +56,13 @@ This document defines ownership and synchronization rules for shared state.
 ### `Timer2Driver`
 
 - **ISR-owned reads/calls**: active driver pointer and that instance's callback slots via `handleInterrupt()`.
-- **loop-owned writes**: active driver pointer via `beginHz()/stop()`, callback slots via `attachCallback()/detachCallback()`.
+- **loop-owned writes**: active driver pointer via `begin()/beginHz()/stop()`, callback slots via `attachCallback()/detachCallback()`.
 - **protection**:
   - active-driver handoff and callback table updates are guarded by `noInterrupts()/interrupts()`.
 
-### `main.cpp` runtime flags
+### Reference firmware runtime flags
 
-- `analogOk`, `digiOk`, `encoderOk` are read by timer callback and written in setup.
+- `analogOk`, `digitalMonitorOk`, `encoderOk` are read by timer callback and written in setup.
 - They are treated as shared ISR/loop state and declared `volatile`.
 
 ---

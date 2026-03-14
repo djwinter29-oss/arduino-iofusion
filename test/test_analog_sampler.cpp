@@ -5,9 +5,10 @@
 void test_analog_sampler_branches() {
   AnalogSampler sampler;
   const uint8_t channels[] = {0, 1};
+  const AnalogSampler::Config config = {channels, 2, 5.0f};
 
   TEST_ASSERT_FALSE(sampler.begin(channels, 0));
-  TEST_ASSERT_TRUE(sampler.begin(channels, 2));
+  TEST_ASSERT_TRUE(sampler.begin(config));
   TEST_ASSERT_EQUAL_UINT8(2, sampler.getChannelCount());
 
   sampler.sampleIfDue();

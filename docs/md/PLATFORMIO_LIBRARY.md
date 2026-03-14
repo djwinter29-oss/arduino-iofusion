@@ -31,6 +31,11 @@ PlatformIO recommends `include/` + `src/` in the library package. In this mono-r
 - `build.includeDir = lib/IOFusion/include`
 - `build.srcDir = lib/IOFusion/src`
 
+Reference firmware for this repository lives separately under:
+
+- `apps/reference_firmware/include`
+- `apps/reference_firmware/src`
+
 Examples are provided under:
 
 - `examples/basic_usage/basic_usage.ino`
@@ -80,13 +85,12 @@ void setup() {
   const uint8_t analogPins[] = {0, 1};
   const uint8_t digitalPins[] = {2, 3};
 
-  analogSampler.begin(analogPins, 2);
-  analogSampler.setVref(5.0f);
+  analogSampler.begin(AnalogSampler::Config{analogPins, 2, 5.0f});
 
-  digitalInputMonitor.begin(digitalPins, 2, 500, 1000.0f, true);
-  encoder.begin(8, 11, 12, 13, true, false);
+  digitalInputMonitor.begin(DigitalInputMonitor::Config{digitalPins, 2, 500, 1000.0f, true});
+  encoder.begin(EncoderGenerator::Config{8, 11, 12, 13, true, false});
 
-  pwm.begin(1000.0f);
+  pwm.begin(Timer1PWM::Config{1000.0f});
   pwm.setDuty(0, 25.0f);
   pwm.setDuty(1, 75.0f);
 }

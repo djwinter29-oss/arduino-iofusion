@@ -35,6 +35,7 @@
   },
   "export": {
     "exclude": [
+      "apps",
       ".github",
       ".pio",
       "coverage",

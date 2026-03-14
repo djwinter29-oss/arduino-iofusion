@@ -4,7 +4,15 @@ AnalogSampler::AnalogSampler() {
   for (uint8_t i = 0; i < MAX_CHANNELS; ++i) _lastValues[i] = 0;
 }
 
+bool AnalogSampler::begin(const Config& config) {
+  if (config.channels == nullptr && config.channelCount != 0) return false;
+  if (!begin(config.channels, config.channelCount)) return false;
+  setVref(config.vref);
+  return true;
+}
+
 bool AnalogSampler::begin(const uint8_t* channels, uint8_t channelCount) {
+  if (channels == nullptr) return false;
   if (channelCount == 0 || channelCount > MAX_CHANNELS) return false;
   for (uint8_t i = 0; i < channelCount; ++i) {
     uint8_t c = channels[i];

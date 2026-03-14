@@ -11,6 +11,9 @@ Timer2Driver timer2;
 DigitalInputMonitor digitalMonitor;
 
 const uint8_t kInputPins[] = {2, 3};
+const DigitalInputMonitor::Config kDigitalMonitorConfig = {kInputPins, 2, kWindowTicks, kTickHz,
+                                                           true};
+const Timer2Driver::Config kTimerConfig(kTickHz);
 
 void onTick() {
   digitalMonitor.onTick();
@@ -21,13 +24,13 @@ void setup() {
   Serial.begin(115200);
   delay(100);
 
-  bool ok = digitalMonitor.begin(kInputPins, 2, kWindowTicks, kTickHz, true);
+  bool ok = digitalMonitor.begin(kDigitalMonitorConfig);
   if (!ok) {
     Serial.println(F("{\"error\":\"digital monitor init failed\"}"));
     return;
   }
 
-  if (timer2.beginHz(kTickHz) == 0) {
+  if (timer2.begin(kTimerConfig) == 0) {
     Serial.println(F("{\"error\":\"timer2 init failed\"}"));
     return;
   }

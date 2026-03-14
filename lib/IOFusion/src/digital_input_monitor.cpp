@@ -10,8 +10,15 @@ inline uint8_t readPinState(volatile uint8_t* portIn, uint8_t mask) {
 
 DigitalInputMonitor::DigitalInputMonitor() {}
 
+bool DigitalInputMonitor::begin(const Config& config) {
+  if (config.pins == nullptr && config.pinCount != 0) return false;
+  return begin(config.pins, config.pinCount, config.windowTicks, config.tickHz,
+               config.usePullup);
+}
+
 bool DigitalInputMonitor::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks,
                                 float tickHz, bool usePullup) {
+  if (pins == nullptr) return false;
   if (count == 0 || count > MAX_PINS) return false;
   if (windowTicks == 0 || tickHz <= 0.0f) return false;
   _pinCount = count;
