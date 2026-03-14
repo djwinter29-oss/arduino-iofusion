@@ -24,6 +24,9 @@ void test_analog_sampler_branches() {
 
   TEST_ASSERT_FLOAT_WITHIN(0.02f, 3.3f, sampler.getValue(0));
   TEST_ASSERT_FLOAT_WITHIN(0.02f, (256.0f * 3.3f) / 1023.0f, sampler.getValue(1));
+  TEST_ASSERT_EQUAL_UINT16(3300, sampler.getMillivolts(0));
+  sampler.setVref(70000.0f);
+  TEST_ASSERT_EQUAL_UINT16(3300, sampler.getMillivolts(0));
 }
 
 void test_analog_sampler_config_edges() {
@@ -45,4 +48,7 @@ void test_analog_sampler_config_edges() {
 
   TEST_ASSERT_FLOAT_WITHIN(0.02f, (512.0f * 2.5f) / 1023.0f, sampler.getValue(0));
   TEST_ASSERT_FLOAT_WITHIN(0.02f, 2.5f, sampler.getValue(1));
+  TEST_ASSERT_EQUAL_UINT16(1251, sampler.getMillivolts(0));
+  sampler.setVrefMillivolts(0);
+  TEST_ASSERT_EQUAL_UINT16(2500, sampler.getMillivolts(1));
 }

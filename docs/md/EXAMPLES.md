@@ -32,6 +32,8 @@ pio device monitor -b 115200
 
 ## Wiring quick notes (Arduino Uno)
 
+These examples assume pin and timer assignments are planned ahead of time. IOFusion keeps the runtime lightweight and does not try to detect all cross-module wiring overlaps for you.
+
 - `basic_usage`
   - Analog: A0, A1
   - Digital input monitor: D2, D3

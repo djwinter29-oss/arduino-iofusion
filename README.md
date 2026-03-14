@@ -108,6 +108,8 @@ For `DigitalInputMonitor`, also size `tickHz` and `windowTicks` around the actua
 
 The library is intentionally Arduino-specific, but board wiring is left to the caller. Public setup APIs now provide typed `Config` structs so pin assignments, timing parameters, pull-up policy, and frequency selection stay explicit and readable at the call site.
 
+IOFusion intentionally keeps configuration lightweight: it does not perform exhaustive runtime checks for overlapping pin assignments or timer-resource conflicts across modules. In the intended Arduino/Uno use case these mappings are chosen up front, remain effectively compile-time design decisions, and do not rely on dynamic allocation or late resource discovery. It is the caller's responsibility to ensure configured pins and timer users do not overlap.
+
 ## Command line interface
 
 The firmware exposes a simple serial command line for querying sensors and controlling PWM. Commands are ASCII and return JSON-like responses.
@@ -173,6 +175,9 @@ pio run --target upload
 ## Unit tests and coverage
 
 Host-based unit tests (IOFusion library) run under a native build with mocked Arduino APIs:
+
+- Native coverage intentionally targets loop-side and parser logic only.
+- AVR register drivers (`Timer1PWM`, `Timer2Driver`) are excluded from host coverage and should be validated on real hardware.
 
 - Windows: run [tools/coverage.ps1](tools/coverage.ps1)
 - Linux/macOS: run [tools/coverage.sh](tools/coverage.sh)

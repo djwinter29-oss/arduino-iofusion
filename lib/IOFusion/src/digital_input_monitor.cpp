@@ -6,6 +6,11 @@ inline uint8_t readPinState(volatile uint8_t* portIn, uint8_t mask) {
   return (portIn && ((*portIn & mask) != 0)) ? 1 : 0;
 }
 
+uint32_t hzToMilliHz(float tickHz) {
+  if (tickHz <= 0.0f) return 0;
+  return static_cast<uint32_t>((tickHz * 1000.0f) + 0.5f);
+}
+
 }  // namespace
 
 DigitalInputMonitor::DigitalInputMonitor() {}
@@ -18,12 +23,13 @@ bool DigitalInputMonitor::begin(const Config& config) {
 
 bool DigitalInputMonitor::begin(const uint8_t* pins, uint8_t count, uint16_t windowTicks,
                                 float tickHz, bool usePullup) {
+  uint32_t tickMilliHz = hzToMilliHz(tickHz);
   if (pins == nullptr) return false;
   if (count == 0 || count > MAX_PINS) return false;
-  if (windowTicks == 0 || tickHz <= 0.0f) return false;
+  if (windowTicks == 0 || tickMilliHz == 0) return false;
   _pinCount = count;
   _windowTicks = windowTicks;
-  _tickHz = tickHz;
+  _tickMilliHz = tickMilliHz;
   for (uint8_t i = 0; i < _pinCount; ++i) {
     _pins[i] = pins[i];
     if (usePullup)
@@ -37,16 +43,22 @@ bool DigitalInputMonitor::begin(const uint8_t* pins, uint8_t count, uint16_t win
     _edgeCnt[i] = 0;
     _highCnt[i] = 0;
     _lastState[i] = readPinState(_pinPortIn[i], _pinMask[i]);
-    _freq[i] = 0.0f;
-    _duty[i] = 0.0f;
+    _freqMilliHz[i] = 0;
+    _dutyPermille[i] = 0;
   }
   _samplesInWindow = 0;
   _windowReady = false;
+  _overrunCount = 0;
   return true;
 }
 
 void DigitalInputMonitor::onTick() {
-  if (_windowReady) return;
+  if (_windowReady) {
+    if (_overrunCount != 0xFFFFFFFFUL) {
+      ++_overrunCount;
+    }
+    return;
+  }
   for (uint8_t i = 0; i < _pinCount; ++i) {
     uint8_t s = readPinState(_pinPortIn[i], _pinMask[i]);
     if (s) _highCnt[i]++;
@@ -65,9 +77,11 @@ void DigitalInputMonitor::updateIfReady() {
   uint16_t samples = 0;
   uint16_t edgeCnt[MAX_PINS];
   uint16_t highCnt[MAX_PINS];
+  uint32_t tickMilliHz = 0;
 
   noInterrupts();
   samples = _samplesInWindow;
+  tickMilliHz = _tickMilliHz;
   for (uint8_t i = 0; i < _pinCount; ++i) {
     edgeCnt[i] = _edgeCnt[i];
     highCnt[i] = _highCnt[i];
@@ -78,18 +92,19 @@ void DigitalInputMonitor::updateIfReady() {
   _windowReady = false;
   interrupts();
 
-  if (samples == 0 || _tickHz <= 0.0f) {
+  if (samples == 0 || tickMilliHz == 0) {
     for (uint8_t i = 0; i < _pinCount; ++i) {
-      _freq[i] = 0.0f;
-      _duty[i] = 0.0f;
+      _freqMilliHz[i] = 0;
+      _dutyPermille[i] = 0;
     }
     return;
   }
 
-  float periodSec = ((float)samples) / _tickHz;
   for (uint8_t i = 0; i < _pinCount; ++i) {
-    _freq[i] = (float)edgeCnt[i] / periodSec;
-    _duty[i] = (100.0f * (float)highCnt[i]) / (float)samples;
+    uint64_t freqMilliHz = static_cast<uint64_t>(edgeCnt[i]) * static_cast<uint64_t>(tickMilliHz);
+    _freqMilliHz[i] = static_cast<uint32_t>((freqMilliHz + (samples / 2U)) / samples);
+    uint32_t dutyPermille = (static_cast<uint32_t>(highCnt[i]) * 1000U) + (samples / 2U);
+    _dutyPermille[i] = static_cast<uint16_t>(dutyPermille / samples);
   }
 }
 
@@ -98,17 +113,32 @@ uint8_t DigitalInputMonitor::getPinCount() const {
 }
 
 float DigitalInputMonitor::getFrequency(uint8_t idx) const {
-  if (idx >= _pinCount) return 0.0f;
+  return static_cast<float>(getFrequencyMilliHz(idx)) / 1000.0f;
+}
+
+uint32_t DigitalInputMonitor::getFrequencyMilliHz(uint8_t idx) const {
+  if (idx >= _pinCount) return 0;
   noInterrupts();
-  float v = _freq[idx];
+  uint32_t v = _freqMilliHz[idx];
   interrupts();
   return v;
 }
 
 float DigitalInputMonitor::getDutyCycle(uint8_t idx) const {
-  if (idx >= _pinCount) return 0.0f;
+  return static_cast<float>(getDutyPermille(idx)) / 10.0f;
+}
+
+uint16_t DigitalInputMonitor::getDutyPermille(uint8_t idx) const {
+  if (idx >= _pinCount) return 0;
   noInterrupts();
-  float v = _duty[idx];
+  uint16_t v = _dutyPermille[idx];
+  interrupts();
+  return v;
+}
+
+uint32_t DigitalInputMonitor::getOverrunCount() const {
+  noInterrupts();
+  uint32_t v = _overrunCount;
   interrupts();
   return v;
 }

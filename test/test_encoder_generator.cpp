@@ -69,6 +69,7 @@ void test_encoder_generator_branches() {
 
 void test_encoder_generator_config_edges() {
   EncoderGenerator encoder;
+  EncoderGenerator separatedPorts;
 
   encoder.onTick();
   TEST_ASSERT_EQUAL_INT32(0, encoder.getPosition());
@@ -87,17 +88,26 @@ void test_encoder_generator_config_edges() {
   TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
   mockZeroMaskPin = -1;
   TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{64, 10, 2, 3, false, true}));
+  TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{9, 64, 2, 3, false, true}));
+
+  mockNullOutputPort = digitalPinToPort(16);
+  TEST_ASSERT_FALSE(separatedPorts.begin(EncoderGenerator::Config{8, 16, 24, 32, false, true}));
+  mockNullOutputPort = -1;
+  mockZeroMaskPin = 16;
+  TEST_ASSERT_FALSE(separatedPorts.begin(EncoderGenerator::Config{8, 16, 24, 32, false, true}));
+  mockZeroMaskPin = -1;
+
   mockNullInputPort = digitalPinToPort(2);
   TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
   mockNullInputPort = -1;
-  mockNullInputPort = digitalPinToPort(3);
-  TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
+  mockNullInputPort = digitalPinToPort(32);
+  TEST_ASSERT_FALSE(separatedPorts.begin(EncoderGenerator::Config{8, 16, 24, 32, false, true}));
   mockNullInputPort = -1;
   mockZeroMaskPin = 2;
   TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
   mockZeroMaskPin = -1;
-  mockZeroMaskPin = 3;
-  TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 3, false, true}));
+  mockZeroMaskPin = 32;
+  TEST_ASSERT_FALSE(separatedPorts.begin(EncoderGenerator::Config{8, 16, 24, 32, false, true}));
   mockZeroMaskPin = -1;
   TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{9, 10, 64, 3, false, true}));
   TEST_ASSERT_FALSE(encoder.begin(EncoderGenerator::Config{9, 10, 2, 64, false, true}));

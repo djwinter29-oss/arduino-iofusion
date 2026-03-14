@@ -30,8 +30,8 @@ bool EncoderGenerator::begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t dow
   if (portA == NOT_A_PIN || portB == NOT_A_PIN || _portAOut == nullptr || _portBOut == nullptr ||
       _maskA == 0 || _maskB == 0)
     return false;
-  if (_portAOut) *_portAOut &= ~_maskA;
-  if (_portBOut) *_portBOut &= ~_maskB;
+  *_portAOut &= ~_maskA;
+  *_portBOut &= ~_maskB;
   _state = 0;
 
   _pinUp = up;

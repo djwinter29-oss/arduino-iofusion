@@ -21,3 +21,4 @@ artifacts/
 docs/doxygen/
 coverage/
 
+*.gcov

@@ -9,7 +9,7 @@ struct DigitalInputMonitorMirror {
   uint8_t pins[8];
   uint8_t pinCount;
   uint16_t windowTicks;
-  float tickHz;
+  uint32_t tickMilliHz;
   volatile uint8_t* pinPortIn[8];
   uint8_t pinMask[8];
   volatile uint16_t samplesInWindow;
@@ -17,8 +17,9 @@ struct DigitalInputMonitorMirror {
   volatile uint16_t highCnt[8];
   volatile uint8_t lastState[8];
   volatile bool windowReady;
-  float freq[8];
-  float duty[8];
+  volatile uint32_t overrunCount;
+  uint32_t freqMilliHz[8];
+  uint16_t dutyPermille[8];
 };
 
 }  // namespace
@@ -52,10 +53,14 @@ void test_digital_input_monitor_branches() {
   digitalMonitor.onTick();
 
   digitalMonitor.onTick();
+  TEST_ASSERT_EQUAL_UINT32(1, digitalMonitor.getOverrunCount());
   digitalMonitor.updateIfReady();
 
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 250.0f, digitalMonitor.getFrequency(0));
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 50.0f, digitalMonitor.getDutyCycle(0));
+  TEST_ASSERT_EQUAL_UINT32(250000, digitalMonitor.getFrequencyMilliHz(0));
+  TEST_ASSERT_EQUAL_UINT16(500, digitalMonitor.getDutyPermille(0));
+  TEST_ASSERT_EQUAL_UINT32(1, digitalMonitor.getOverrunCount());
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, digitalMonitor.getFrequency(9));
   TEST_ASSERT_FLOAT_WITHIN(0.0001f, 0.0f, digitalMonitor.getDutyCycle(9));
 }
@@ -77,39 +82,52 @@ void test_digital_input_monitor_config_edges() {
   TEST_ASSERT_FALSE(digitalMonitor.begin(pins, 1, 4, 1000.0f, false));
   mockZeroMaskPin = -1;
   TEST_ASSERT_TRUE(digitalMonitor.begin(DigitalInputMonitor::Config{pins, 1, 2, 1000.0f, false}));
+  TEST_ASSERT_EQUAL_UINT32(0, digitalMonitor.getOverrunCount());
 
   setDigitalPin(2, true);
   digitalMonitor.onTick();
   digitalMonitor.onTick();
   digitalMonitor.onTick();
+  TEST_ASSERT_EQUAL_UINT32(1, digitalMonitor.getOverrunCount());
   digitalMonitor.updateIfReady();
 
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 500.0f, digitalMonitor.getFrequency(0));
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 100.0f, digitalMonitor.getDutyCycle(0));
+  TEST_ASSERT_EQUAL_UINT32(500000, digitalMonitor.getFrequencyMilliHz(0));
+  TEST_ASSERT_EQUAL_UINT16(1000, digitalMonitor.getDutyPermille(0));
 
   DigitalInputMonitorMirror& mirror = reinterpret_cast<DigitalInputMonitorMirror&>(digitalMonitor);
   mirror.pinCount = 1;
-  mirror.tickHz = 0.0f;
+  mirror.tickMilliHz = 0;
   mirror.samplesInWindow = 1;
   mirror.windowReady = true;
-  mirror.freq[0] = 123.0f;
-  mirror.duty[0] = 45.0f;
+  mirror.overrunCount = 5;
+  mirror.freqMilliHz[0] = 123000;
+  mirror.dutyPermille[0] = 450;
 
   digitalMonitor.updateIfReady();
 
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, digitalMonitor.getFrequency(0));
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, digitalMonitor.getDutyCycle(0));
+  TEST_ASSERT_EQUAL_UINT32(5, digitalMonitor.getOverrunCount());
 
-  mirror.tickHz = 1000.0f;
+  mirror.tickMilliHz = 1000000UL;
   mirror.samplesInWindow = 0;
   mirror.windowReady = true;
-  mirror.freq[0] = 99.0f;
-  mirror.duty[0] = 77.0f;
+  mirror.overrunCount = 7;
+  mirror.freqMilliHz[0] = 99000;
+  mirror.dutyPermille[0] = 770;
 
   digitalMonitor.updateIfReady();
 
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, digitalMonitor.getFrequency(0));
   TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, digitalMonitor.getDutyCycle(0));
+  TEST_ASSERT_EQUAL_UINT32(7, digitalMonitor.getOverrunCount());
+
+  mirror.overrunCount = 0xFFFFFFFFUL;
+  mirror.windowReady = true;
+  digitalMonitor.onTick();
+  TEST_ASSERT_EQUAL_UINT32(0xFFFFFFFFUL, digitalMonitor.getOverrunCount());
 
   mirror.pinPortIn[0] = nullptr;
   mirror.windowReady = false;

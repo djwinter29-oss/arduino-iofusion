@@ -55,15 +55,22 @@ class DigitalInputMonitor {
   uint8_t getPinCount() const;
   /// @brief Returns the latest frequency estimate for a configured pin.
   float getFrequency(uint8_t idx) const;
+  /// @brief Returns the latest frequency estimate in millihertz for a configured pin.
+  uint32_t getFrequencyMilliHz(uint8_t idx) const;
   /// @brief Returns the latest duty-cycle estimate for a configured pin.
   float getDutyCycle(uint8_t idx) const;
+  /// @brief Returns the latest duty-cycle estimate in permille of full scale.
+  uint16_t getDutyPermille(uint8_t idx) const;
+  /// @brief Returns the cumulative count of timer ticks skipped because the previous window
+  /// has not yet been drained by updateIfReady().
+  uint32_t getOverrunCount() const;
 
  private:
   static const uint8_t MAX_PINS = 8;
   uint8_t _pins[MAX_PINS];
   uint8_t _pinCount = 0;
   uint16_t _windowTicks = 1000;
-  float _tickHz = 1000.0f;
+  uint32_t _tickMilliHz = 1000000UL;
   volatile uint8_t* _pinPortIn[MAX_PINS];
   uint8_t _pinMask[MAX_PINS];
   volatile uint16_t _samplesInWindow = 0;
@@ -71,8 +78,9 @@ class DigitalInputMonitor {
   volatile uint16_t _highCnt[MAX_PINS];
   volatile uint8_t _lastState[MAX_PINS];
   volatile bool _windowReady = false;
-  float _freq[MAX_PINS];
-  float _duty[MAX_PINS];
+  volatile uint32_t _overrunCount = 0;
+  uint32_t _freqMilliHz[MAX_PINS];
+  uint16_t _dutyPermille[MAX_PINS];
 };
 
 #endif  // IOFUSION_DIGITAL_INPUT_MONITOR_H

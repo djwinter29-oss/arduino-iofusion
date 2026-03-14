@@ -1,5 +1,16 @@
 #include "analog_sampler.h"
 
+namespace {
+
+uint16_t scaleAdcToMillivolts(int adcValue, uint16_t vrefMillivolts) {
+  if (adcValue <= 0) return 0;
+  uint32_t scaled = static_cast<uint32_t>(adcValue) * static_cast<uint32_t>(vrefMillivolts);
+  scaled = (scaled + 511U) / 1023U;
+  return static_cast<uint16_t>(scaled);
+}
+
+}  // namespace
+
 AnalogSampler::AnalogSampler() {
   for (uint8_t i = 0; i < MAX_CHANNELS; ++i) _lastValues[i] = 0;
 }
@@ -55,12 +66,22 @@ uint8_t AnalogSampler::getChannelCount() const {
 }
 
 float AnalogSampler::getValue(uint8_t idx) const {
-  if (idx >= _channelCount) return 0.0f;
-  // ADC range is 0..1023, scale by configured Vref
-  return ((float)_lastValues[idx] * _vref) / 1023.0f;
+  return static_cast<float>(getMillivolts(idx)) / 1000.0f;
+}
+
+uint16_t AnalogSampler::getMillivolts(uint8_t idx) const {
+  if (idx >= _channelCount) return 0;
+  return scaleAdcToMillivolts(_lastValues[idx], _vrefMillivolts);
 }
 
 void AnalogSampler::setVref(float vref) {
   if (vref <= 0.0f) return;
-  _vref = vref;
+  uint32_t millivolts = static_cast<uint32_t>((vref * 1000.0f) + 0.5f);
+  if (millivolts > 65535UL) return;
+  setVrefMillivolts(static_cast<uint16_t>(millivolts));
+}
+
+void AnalogSampler::setVrefMillivolts(uint16_t vrefMillivolts) {
+  if (vrefMillivolts == 0) return;
+  _vrefMillivolts = vrefMillivolts;
 }

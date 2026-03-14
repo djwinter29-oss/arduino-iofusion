@@ -13,6 +13,7 @@ This document describes the current public API contract and stability policy for
 - ISR-facing entry points such as `onTick()` must remain minimal.
 - Loop-facing methods perform heavier math, formatting, and deferred work.
 - Call update methods regularly from `loop()`; the library is not designed around long blocking sections.
+- Pin maps and timer ownership are caller-managed. To keep the library lightweight on Uno-class targets, IOFusion does not attempt exhaustive runtime detection of overlapping pin assignments or cross-module timer conflicts.
 
 ## Stability Policy
 
@@ -72,10 +73,18 @@ Preferred setup:
 - `float getValue(uint8_t idx) const`
   - Returns voltage in volts using configured `Vref`.
   - Out-of-range `idx` returns `0.0`.
+- `uint16_t getMillivolts(uint8_t idx) const`
+  - Returns the scaled analog value in millivolts.
 
 - `void setVref(float vref)`
   - Sets ADC scaling reference voltage.
   - Non-positive values are ignored.
+- `void setVrefMillivolts(uint16_t vrefMillivolts)`
+  - Fixed-point alternative for AVR-friendly callers.
+
+Implementation note:
+
+- `AnalogSampler` stores `Vref` internally in millivolts and converts to float only in `getValue()`.
 
 ---
 
@@ -101,14 +110,26 @@ Preferred setup:
 
 - `void onTick()`
   - ISR-side sampling and counter accumulation.
+  - If the previous sampling window has not yet been drained, the monitor increments an overrun counter instead of silently sampling stale data.
 
 - `void updateIfReady()`
   - Loop-side conversion to frequency (Hz) and duty (%).
 
 - `uint8_t getPinCount() const`
 - `float getFrequency(uint8_t idx) const`
+- `uint32_t getFrequencyMilliHz(uint8_t idx) const`
 - `float getDutyCycle(uint8_t idx) const`
+- `uint16_t getDutyPermille(uint8_t idx) const`
   - Out-of-range `idx` returns `0.0`.
+- `uint32_t getOverrunCount() const`
+  - Returns the cumulative number of timer ticks skipped because `updateIfReady()` had not yet drained the completed window.
+  - This is a monotonic fault counter, not a per-window statistic.
+  - The value saturates at `UINT32_MAX` rather than wrapping.
+  - A non-zero count indicates loop-side lag or serial/backpressure stalls.
+
+Implementation note:
+
+- `DigitalInputMonitor` stores computed results internally as fixed-point (`millihertz` and `permille`) and converts to float only in the compatibility getters.
 
 ---
 
@@ -127,6 +148,7 @@ Preferred setup:
 - `bool begin(uint8_t pinA, uint8_t pinB, uint8_t up, uint8_t down, bool usePullup=false, bool activeHigh=true)`
   - Convenience overload for positional setup.
   - Configures quadrature outputs (`pinA`, `pinB`) and direction inputs (`up`, `down`).
+  - The caller is responsible for choosing non-overlapping pins; this API does not try to validate every cross-role wiring conflict at runtime.
   - Default control semantics are logic-driven, active-HIGH inputs.
   - For direct switch-to-ground wiring, use `usePullup=true` and `activeHigh=false`.
 
@@ -156,6 +178,7 @@ Preferred setup:
   - Preferred setup entry point.
 - `bool begin(float freqHz)`
   - Convenience overload for direct frequency setup.
+  - The caller is responsible for ensuring Timer1 and pins D9/D10 are not already committed elsewhere in the application.
 
 - `void setDuty(uint8_t channel, float percent)`
   - Channel `0`/`1`, duty in `0..100` (input is clamped).
@@ -182,8 +205,10 @@ Preferred setup:
 - `uint16_t beginHz(float freqHz)`
   - Convenience overload for direct frequency setup.
   - Starts Timer2 near requested frequency.
-  - Returns the OCR value used on AVR, or `0` on invalid input / when Timer2 is already owned by another `Timer2Driver` instance.
-  - Clears any previously registered callbacks for that driver instance.
+  - Timer2 configuration is startup-only; runtime retuning is intentionally not supported.
+  - Returns the OCR value used on AVR, or `0` on invalid input / when Timer2 is already active.
+  - Call `stop()` first if you need to release Timer2 and configure it again.
+  - The caller is responsible for ensuring Timer2 is not needed by other firmware features on the target.
 
 - `void stop()`
 - `bool attachCallback(Timer2Callback cb)`
@@ -212,6 +237,7 @@ Response contract:
 - Success: `{"status":"ok"}` for mutating PWM commands.
 - Errors (stable keys): `{"error":"..."}`.
 - Unknown command: `{"error":"unknown command"}`.
+- `digital?` responses include `overrunTicks` so stale sampling windows are detectable from the reference firmware.
 
 Parser behavior notes:
 

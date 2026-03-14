@@ -1,7 +1,6 @@
 #include "firmware_cli.h"
 
 #include <ctype.h>
-#include <stdlib.h>
 #include <string.h>
 
 namespace {
@@ -11,16 +10,6 @@ void printError(T message) {
   Serial.print(F("{\"error\":\""));
   Serial.print(message);
   Serial.println(F("\"}"));
-}
-
-bool tryParsePositiveFloat(const char* token, float& out) {
-  char* endp = nullptr;
-  double value = strtod(token, &endp);
-  if (endp == token || *endp != '\0' || value <= 0.0) {
-    return false;
-  }
-  out = static_cast<float>(value);
-  return true;
 }
 
 bool tryParseIntInRange(const char* token, int minValue, int maxValue, int& out) {
@@ -36,14 +25,85 @@ bool tryParseIntInRange(const char* token, int minValue, int maxValue, int& out)
   return true;
 }
 
-bool tryParseFloat(const char* token, float& out) {
-  char* endp = nullptr;
-  double value = strtod(token, &endp);
-  if (endp == token || *endp != '\0') {
+bool tryParseFixed3(const char* token, bool allowSign, int32_t& out) {
+  bool negative = false;
+  if (*token == '+' || *token == '-') {
+    if (!allowSign) return false;
+    negative = (*token == '-');
+    ++token;
+  }
+  if (*token == '\0') return false;
+
+  uint32_t integerPart = 0;
+  uint32_t fractionalPart = 0;
+  uint8_t fractionalDigits = 0;
+  bool seenDigit = false;
+  bool seenDot = false;
+
+  for (const char* p = token; *p != '\0'; ++p) {
+    char c = *p;
+    if (c >= '0' && c <= '9') {
+      uint8_t digit = static_cast<uint8_t>(c - '0');
+      seenDigit = true;
+      if (seenDot) {
+        if (fractionalDigits >= 3) return false;
+        fractionalPart = (fractionalPart * 10U) + digit;
+        ++fractionalDigits;
+      } else {
+        if (integerPart > 999999U) return false;
+        integerPart = (integerPart * 10U) + digit;
+      }
+      continue;
+    }
+    if (c == '.' && !seenDot) {
+      seenDot = true;
+      continue;
+    }
     return false;
   }
-  out = static_cast<float>(value);
+
+  if (!seenDigit) return false;
+  while (fractionalDigits < 3) {
+    fractionalPart *= 10U;
+    ++fractionalDigits;
+  }
+
+  uint32_t scaled = (integerPart * 1000U) + fractionalPart;
+  if (scaled > 2147483647UL) return false;
+  out = negative ? -static_cast<int32_t>(scaled) : static_cast<int32_t>(scaled);
   return true;
+}
+
+bool tryParsePositiveFixed3(const char* token, uint32_t& out) {
+  int32_t scaled = 0;
+  if (!tryParseFixed3(token, false, scaled) || scaled <= 0) return false;
+  out = static_cast<uint32_t>(scaled);
+  return true;
+}
+
+bool tryParseSignedFixed3(const char* token, int32_t& out) {
+  return tryParseFixed3(token, true, out);
+}
+
+void printThreeDigits(uint16_t value) {
+  char buffer[4];
+  buffer[0] = static_cast<char>('0' + ((value / 100U) % 10U));
+  buffer[1] = static_cast<char>('0' + ((value / 10U) % 10U));
+  buffer[2] = static_cast<char>('0' + (value % 10U));
+  buffer[3] = '\0';
+  Serial.print(buffer);
+}
+
+void printMillivoltsAsVolts(uint16_t millivolts) {
+  Serial.print(millivolts / 1000U);
+  Serial.print('.');
+  printThreeDigits(static_cast<uint16_t>(millivolts % 1000U));
+}
+
+void printDeciScaled(uint32_t deciValue) {
+  Serial.print(deciValue / 10U);
+  Serial.print('.');
+  Serial.print(deciValue % 10U);
 }
 
 void printStatusOk() {
@@ -59,11 +119,12 @@ bool handlePwmFreq(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
     printError(F("missing frequency"));
     return true;
   }
-  float freq = 0.0f;
-  if (!tryParsePositiveFloat(tokens[1], freq)) {
+  uint32_t freqMilliHz = 0;
+  if (!tryParsePositiveFixed3(tokens[1], freqMilliHz)) {
     printError(F("invalid frequency"));
     return true;
   }
+  float freq = static_cast<float>(freqMilliHz) / 1000.0f;
   if (pwm.begin(Timer1PWM::Config{freq})) {
     printStatusOk();
   } else {
@@ -82,11 +143,12 @@ bool handlePwmDuty(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
     printError(F("invalid channel"));
     return true;
   }
-  float duty = 0.0f;
-  if (!tryParseFloat(tokens[2], duty)) {
+  int32_t dutyMilliPercent = 0;
+  if (!tryParseSignedFixed3(tokens[2], dutyMilliPercent)) {
     printError(F("invalid duty"));
     return true;
   }
+  float duty = static_cast<float>(dutyMilliPercent) / 1000.0f;
   pwm.setDuty(static_cast<uint8_t>(channel), duty);
   printStatusOk();
   return true;
@@ -118,23 +180,23 @@ void FirmwareCli::respondAnalog() {
     Serial.print(F("\"a"));
     Serial.print(_analogPins[i]);
     Serial.print(F("\":"));
-    Serial.print(_analog.getValue(i), 3);
+    printMillivoltsAsVolts(_analog.getMillivolts(i));
     if (i + 1 < _analogCount) Serial.print(F(","));
   }
   Serial.println(F("}"));
 }
 
 void FirmwareCli::respondDigital() {
-  Serial.print(F("{"));
+  Serial.print(F("{\"overrunTicks\":"));
+  Serial.print(_digitalMonitor.getOverrunCount());
   for (uint8_t i = 0; i < _digitalCount; ++i) {
-    Serial.print(F("\"d"));
+    Serial.print(F(",\"d"));
     Serial.print(_digitalPins[i]);
     Serial.print(F("\":{\"freq\":"));
-    Serial.print(_digitalMonitor.getFrequency(i), 1);
+    printDeciScaled((_digitalMonitor.getFrequencyMilliHz(i) + 50U) / 100U);
     Serial.print(F(",\"duty\":"));
-    Serial.print(_digitalMonitor.getDutyCycle(i), 1);
+    printDeciScaled(_digitalMonitor.getDutyPermille(i));
     Serial.print(F("}"));
-    if (i + 1 < _digitalCount) Serial.print(F(","));
   }
   Serial.println(F("}"));
 }
@@ -158,7 +220,6 @@ void FirmwareCli::handleCommand(char* cmd) {
     tokens[tokenCount++] = tok;
     tok = strtok(nullptr, " ");
   }
-  if (tokenCount == 0) return;
 
   for (char* p = tokens[0]; *p; ++p) {
     *p = tolower(static_cast<unsigned char>(*p));

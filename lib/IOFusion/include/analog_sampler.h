@@ -53,9 +53,15 @@ class AnalogSampler {
   /// @return Voltage in the range 0.0 .. Vref, or 0.0 when @p idx is out of range.
   float getValue(uint8_t idx) const;
 
+  /// @brief Returns the most recent scaled channel value in millivolts.
+  uint16_t getMillivolts(uint8_t idx) const;
+
   /// @brief Updates the voltage reference used for scaling ADC readings.
   /// @param vref New reference voltage in volts.
   void setVref(float vref);
+
+  /// @brief Updates the voltage reference used for scaling ADC readings in millivolts.
+  void setVrefMillivolts(uint16_t vrefMillivolts);
 
  private:
   static const uint8_t MAX_CHANNELS = 6;
@@ -63,7 +69,7 @@ class AnalogSampler {
   uint8_t _channelCount = 0;
   volatile bool _sampleRequested = false;
   int _lastValues[MAX_CHANNELS];
-  float _vref = 5.0f;
+  uint16_t _vrefMillivolts = 5000;
 };
 
 #endif  // IOFUSION_ANALOG_SAMPLER_H

@@ -1,25 +1,6 @@
-// NOTE: PWM driver is AVR-specific. For native/unit-test builds we provide stubs.
-
-#if defined(UNIT_TEST)
 #include "avr_timer1_pwm.h"
-#include <stdint.h>
 
-Timer1PWM::Timer1PWM() {}
-
-bool Timer1PWM::begin(const Config& config) {
-  return begin(config.frequencyHz);
-}
-
-bool Timer1PWM::begin(float freqHz) {
-  return (freqHz > 0.0f && freqHz < 1000000.0f);
-}
-void Timer1PWM::stop() {}
-void Timer1PWM::setDuty(uint8_t, float) {}
-
-#endif
-
-#if !defined(UNIT_TEST)
-#include "avr_timer1_pwm.h"
+#if defined(__AVR__)
 
 namespace {
 
@@ -199,4 +180,4 @@ uint16_t Timer1PWM::percentToCounts(float percent, uint16_t top) const {
   if (v > top) v = top;
   return (uint16_t)v;
 }
-#endif  // !UNIT_TEST
+#endif  // __AVR__

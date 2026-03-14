@@ -30,8 +30,10 @@ void test_firmware_cli_commands() {
 
   runCmd(cli, "analog?");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"a0\""));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), ":0.000"));
 
   runCmd(cli, "digital?");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"overrunTicks\":"));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"d2\""));
 
   runCmd(cli, "encoder?");
@@ -43,7 +45,22 @@ void test_firmware_cli_commands() {
   runCmd(cli, "pwm-freq abc");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
 
+  runCmd(cli, "pwm-freq +1");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+
   runCmd(cli, "pwm-freq 12x");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+
+  runCmd(cli, "pwm-freq 1.2345");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+
+  runCmd(cli, "pwm-freq 1.2.3");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+
+  runCmd(cli, "pwm-freq 10000000");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+
+  runCmd(cli, "pwm-freq 2147484.000");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
 
   runCmd(cli, "  PWM-FREQ   500   ");
@@ -73,11 +90,23 @@ void test_firmware_cli_commands() {
   runCmd(cli, "pwm-duty 1 abc");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid duty"));
 
+  runCmd(cli, "pwm-duty 1 -");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid duty"));
+
+  runCmd(cli, "pwm-duty 1 .");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid duty"));
+
+  runCmd(cli, "pwm-duty 1 +12.5");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
+
   runCmd(cli, "PWM-DUTY 0 50");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
 
   runCmd(cli, "pwm-duty -1 10");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid channel"));
+
+  runCmd(cli, "pwm-duty 1 -12.5");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
 
   runCmd(cli, "pwm-duty 1 12.5x");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid duty"));
@@ -123,6 +152,7 @@ void test_firmware_cli_edge_cases() {
   setDigitalPin(2, true);
   setDigitalPin(3, true);
   digitalMonitor.onTick();
+  digitalMonitor.onTick();
   digitalMonitor.updateIfReady();
 
   FirmwareCli cli(analog, digitalMonitor, encoder, pwm, FirmwareCli::Config{aPins, 2, dPins, 2});
@@ -142,8 +172,11 @@ void test_firmware_cli_edge_cases() {
   cli.processSerial();
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"a0\""));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), ",\"a1\""));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"a0\":1.251"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"a1\":3.754"));
 
   runCmd(cli, "digital?");
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"overrunTicks\":1"));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "\"d2\""));
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), ",\"d3\""));
 
@@ -185,6 +218,13 @@ void test_firmware_cli_internal_edges() {
   Serial.setInput("   \r\n");
   cli.processSerial();
   TEST_ASSERT_EQUAL_STRING("", Serial.getOutput().c_str());
+
+  Serial.setInput("x");
+  cli.processSerial();
+  TEST_ASSERT_EQUAL_STRING("", Serial.getOutput().c_str());
+  Serial.setInput("\n");
+  cli.processSerial();
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "unknown command"));
 
   runCmd(cli, "   help   extra");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "help"));

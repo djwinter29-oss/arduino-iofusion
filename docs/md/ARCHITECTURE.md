@@ -26,6 +26,7 @@ This keeps interrupt latency low while still allowing useful higher-level behavi
 - Header: `lib/IOFusion/include/avr_timer2_driver.h`
 - Source: `lib/IOFusion/src/avr_timer2_driver.cpp`
 - Role: owns the periodic Timer2 tick and dispatches registered callbacks from ISR context.
+- Contract: Timer2 frequency is chosen at startup; runtime retuning is intentionally disallowed until `stop()` releases the timer.
 
 ### AnalogSampler
 
@@ -63,6 +64,8 @@ This keeps interrupt latency low while still allowing useful higher-level behavi
 Each public component exposes a typed `Config` struct. That keeps wiring, timing, pull-up policy, and frequency choices explicit without hiding Arduino-specific details behind another abstraction layer.
 
 Convenience overloads remain available, but config structs are the preferred setup surface.
+
+To stay small and predictable on Uno-class targets, the library assumes these assignments are decided up front by the application. IOFusion does not do exhaustive runtime reconciliation of overlapping pin maps or timer ownership across modules, and it does not use dynamic allocation or runtime resource negotiation to resolve such conflicts. Non-overlapping wiring and timer planning are therefore caller responsibilities.
 
 ## Runtime Data Flow
 
