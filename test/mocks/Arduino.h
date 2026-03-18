@@ -14,6 +14,8 @@
 #define INPUT 0
 #define OUTPUT 1
 #define INPUT_PULLUP 2
+#define LOW 0
+#define HIGH 1
 #define NOT_A_PIN 0xFF
 
 #ifndef _BV
@@ -70,6 +72,17 @@ inline int analogRead(uint8_t pin) {
   ++mockAnalogReadCount;
   if (pin >= 16) return 0;
   return mockAnalogValues[pin];
+}
+
+inline void digitalWrite(uint8_t pin, uint8_t value) {
+  uint8_t port = digitalPinToPort(pin);
+  uint8_t mask = digitalPinToBitMask(pin);
+  volatile uint8_t* out = portOutputRegister(port);
+  if (!out || mask == 0) return;
+  if (value == HIGH)
+    *out |= mask;
+  else
+    *out &= static_cast<uint8_t>(~mask);
 }
 
 class MockSerial {

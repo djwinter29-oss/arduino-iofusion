@@ -2,6 +2,10 @@
 
 #include "test_support.h"
 
+void test_digital_out_begin_rejects_invalid_args();
+void test_digital_out_begin_and_basic_ops();
+void test_digital_out_index_bounds();
+
 void setUp() {
   resetTestState();
 }
@@ -22,6 +26,9 @@ int main(int argc, char** argv) {
   RUN_TEST(test_firmware_cli_commands);
   RUN_TEST(test_firmware_cli_edge_cases);
   RUN_TEST(test_firmware_cli_internal_edges);
+  RUN_TEST(test_digital_out_begin_rejects_invalid_args);
+  RUN_TEST(test_digital_out_begin_and_basic_ops);
+  RUN_TEST(test_digital_out_index_bounds);
 
   return UNITY_END();
 }
