@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef PIO_UNIT_TESTING
+#include "Arduino.h"
+#else
 #include <Arduino.h>
+#endif
 
 class DigitalOut {
  public:
