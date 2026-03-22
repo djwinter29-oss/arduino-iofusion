@@ -121,26 +121,15 @@ void printCommaIfNeeded(bool& firstField) {
 
 void printHelp() {
   Serial.println(
-      F("{\"help\":\"analog? digital? encoder? all? reset(immediate) pwm-freq <hz> pwm-duty <ch> "
+      F("{\"help\":\"analog? digital? encoder? all? reset(immediate) pwm-duty <ch> "
         "<pct>\"}"));
 }
 
 bool handlePwmFreq(Timer1PWM& pwm, char* const* tokens, uint8_t tokenCount) {
-  if (tokenCount < 2) {
-    printError(F("missing frequency"));
-    return true;
-  }
-  uint32_t freqMilliHz = 0;
-  if (!tryParsePositiveFixed3(tokens[1], freqMilliHz)) {
-    printError(F("invalid frequency"));
-    return true;
-  }
-  float freq = static_cast<float>(freqMilliHz) / 1000.0f;
-  if (pwm.begin(Timer1PWM::Config{freq})) {
-    printStatusOk();
-  } else {
-    printError(F("unable to set frequency"));
-  }
+  (void)pwm;
+  (void)tokens;
+  (void)tokenCount;
+  printError(F("pwm frequency is startup-only"));
   return true;
 }
 

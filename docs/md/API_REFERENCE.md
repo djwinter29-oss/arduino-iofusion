@@ -261,7 +261,6 @@ Supported commands (case-insensitive command token):
 - `digital?`
 - `encoder?`
 - `all?`
-- `pwm-freq <hz>`
 - `pwm-duty <ch> <pct>`
 - `reset`
 - `help`
@@ -269,6 +268,7 @@ Supported commands (case-insensitive command token):
 Response contract:
 
 - Success: `{"status":"ok"}` for mutating PWM commands.
+- Runtime `pwm-freq` requests are rejected with `{"error":"pwm frequency is startup-only"}` because the reference firmware keeps Timer1 frequency fixed after startup.
 - `reset` returns `{"status":"resetting"}` immediately before the reference firmware requests a board reset.
 - `reset` is intentionally immediate and unconfirmed in the reference firmware; it is defined as a host-issued systemwide reset request rather than a guarded maintenance-only verb.
 - Errors (stable keys): `{"error":"..."}`.

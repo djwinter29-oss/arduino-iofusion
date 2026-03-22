@@ -1,5 +1,6 @@
 platformio
 gcovr
 pyserial
+pytest
 
 

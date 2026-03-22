@@ -117,7 +117,6 @@ Supported commands:
 - `digital?` — returns one coherent published measurement frame for the configured digital inputs, including `frameSeq`, `stale`, `overrunTicks`, frequency, and duty cycle.
 - `encoder?` — returns encoder direction and position.
 - `all?` — returns analog fields, the coherent digital measurement frame, and encoder state in one response. This is a convenience aggregate, not a whole-system atomic snapshot: the digital portion is copied from one published frame, while analog and encoder values are read live and may reflect slightly different instants.
-- `pwm-freq <hz>` — sets Timer1 PWM frequency.
 - `pwm-duty <ch> <pct>` — sets PWM duty for channel 0 or 1.
 - `reset` — requests an immediate board reset. On AVR targets the firmware acknowledges the command and then triggers a watchdog reset. This is intentionally an unguarded host-issued systemwide reset request in the reference firmware, not a confirmation-gated maintenance verb.
 - `help` — prints a short help string.
@@ -125,6 +124,8 @@ Supported commands:
 #### Error reporting
 
 Initialization failures are reported as JSON errors on Serial (e.g., `{"error":"pwm init failed"}`) to aid diagnosis.
+
+The reference firmware keeps Timer1 PWM frequency fixed after startup. Runtime `pwm-freq` retuning is rejected so the serial control surface stays aligned with the documented fixed-configuration lifecycle.
 
 #### Reset command intent
 

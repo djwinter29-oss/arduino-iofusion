@@ -59,40 +59,40 @@ void test_firmware_cli_commands() {
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "resetting"));
 
   runCmd(cli, "pwm-freq");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "missing frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq abc");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq +1");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq 12x");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq 1.2345");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq 1.2.3");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq 10000000");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq 2147484.000");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "  PWM-FREQ   500   ");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq 0");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "invalid frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq 1000");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-freq 1000000");
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "unable to set frequency"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   runCmd(cli, "pwm-duty");
   TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "missing duty parameters"));
@@ -267,7 +267,7 @@ void test_firmware_cli_internal_edges() {
   TEST_ASSERT_EQUAL_STRING("", Serial.getOutput().c_str());
   advanceMillis(100);
   cli.processSerial();
-  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "status"));
+  TEST_ASSERT_NOT_NULL(strstr(Serial.getOutput().c_str(), "startup-only"));
 
   Serial.clearOutput();
   std::string longUnknown(96, 'z');
